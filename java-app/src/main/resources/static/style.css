@@ -1503,8 +1503,8 @@ body {
 }
 
 .auth-logo .logo-icon {
-    width: 200px;
-    height: 120px;
+    width: 240px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3374,4 +3374,10 @@ body {
 
 .searchbar .btn {
     height: 40px;
+}
+
+/* Auth logo overrides on mobile */
+@media (max-width: 480px) {
+    .auth-logo .logo-icon { width: 220px; height: 130px; }
+    .auth-logo .logo-image { height: 100%; }
 }

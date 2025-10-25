@@ -1317,19 +1317,26 @@ function configureNavigation() {
         };
     });
 
-    // Ocultar tarjetas de funcionalidades en Inicio para el rol usuario
+    // Configurar interacciones de tarjetas en Inicio según rol
     const featureItems = document.querySelectorAll('.description-features .feature-item');
-    if (featureItems.length) {
-        if (currentRole === 'user') {
-            // Ocultar todo y dejar solo el acceso a Registro
-            featureItems.forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.description-features .feature-item[onclick*="showSection(\'registro\')"]').forEach(el => {
-                el.style.display = '';
-            });
-        } else {
-            // Mostrar todas las funcionalidades para roles con más permisos
-            featureItems.forEach(el => el.style.display = '');
-        }
+    if (featureItems.length && currentRole === 'user') {
+        ensureFeatureInfoModal();
+        featureItems.forEach(item => {
+            const titleEl = item.querySelector('.feature-content h3');
+            const title = titleEl ? titleEl.textContent.trim() : '';
+            if (title === 'Registro de Mascotas') {
+                item.onclick = function(e) {
+                    e.preventDefault();
+                    showSection('registro');
+                };
+            } else {
+                item.onclick = function(e) {
+                    e.preventDefault();
+                    const info = getFeatureInfoData(title);
+                    showFeatureInfoModal(info);
+                };
+            }
+        });
     }
 
     console.log('✅ Navegación configurada');
@@ -1946,4 +1953,139 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoginForm();
     }
 });
+
+// === Feature Info Modal: solo para rol Usuario ===
+function getFeatureInfoData(title) {
+    const infoMap = {
+        'Gestión de Consultas': {
+            title: 'Gestión de Consultas',
+            description: 'Como usuario, puedes conocer cómo funcionan las consultas, pero su creación y administración está reservada a personal autorizado.',
+            points: [
+                'Programación de consultas por veterinarios autorizados',
+                'Seguimiento del historial clínico de la mascota',
+                'Prescripción y control de tratamientos',
+                'Acceso restringido según rol'
+            ],
+            showGoRegistro: true
+        },
+        'Citas Médicas': {
+            title: 'Citas Médicas',
+            description: 'La gestión de citas permite organizar agendas y prioridades. Como usuario, puedes conocer el proceso, pero no administrar citas.',
+            points: [
+                'Asignación de veterinarios y horarios',
+                'Priorización según urgencia (normal, alta, urgente)',
+                'Visualización de estado: programada, completada o cancelada',
+                'Administración disponible para empleados y administradores'
+            ],
+            showGoRegistro: true
+        },
+        'Control de Accesos': {
+            title: 'Control de Accesos',
+            description: 'El sistema maneja permisos por rol para proteger tu información y definir acciones disponibles.',
+            points: [
+                'Usuario: registrar mascotas',
+                'Empleado: gestionar citas y consultas',
+                'Administrador: acceso completo',
+                'Acceso basado en permisos específicos por sección'
+            ],
+            showGoRegistro: true
+        },
+        'Estadísticas y Reportes': {
+            title: 'Estadísticas y Reportes',
+            description: 'Indicadores en tiempo real del sistema. Como usuario, puedes conocer qué se reporta sin visualizar datos detallados.',
+            points: [
+                'Total de mascotas registradas en el sistema',
+                'Citas programadas y su estado',
+                'Consultas registradas por el personal',
+                'Datos agregados para administración'
+            ],
+            showGoRegistro: true
+        },
+        'Seguridad y Privacidad': {
+            title: 'Seguridad y Privacidad',
+            description: 'Protegemos tus datos con prácticas de seguridad y acceso controlado.',
+            points: [
+                'Encriptación y almacenamiento responsable',
+                'Acceso limitado por rol y permisos',
+                'Sesiones controladas y cierre seguro',
+                'Cumplimiento de buenas prácticas de privacidad'
+            ],
+            showGoRegistro: true
+        }
+    };
+    return infoMap[title] || { title, description: 'Información no disponible', points: [], showGoRegistro: true };
+}
+
+function ensureFeatureInfoModal() {
+    if (document.getElementById('featureInfoModal')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+    .feature-info-modal { position: fixed; inset: 0; display: none; z-index: 2147483647; display: flex; justify-content: center; align-items: flex-start; padding: 160px 16px 32px; box-sizing: border-box; }
+    .feature-info-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); z-index: 1; }
+    .feature-info-dialog { position: relative; width: 100%; max-width: 760px; max-height: 80vh; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: var(--shadow-lg); overflow: auto; z-index: 2; }
+    .feature-info-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); background: var(--gray-50); }
+    .feature-info-body { padding: 20px; }
+    .feature-info-body p { margin-bottom: 12px; color: var(--gray-700); }
+    .feature-info-list { margin: 0; padding-left: 18px; }
+    .feature-info-list li { margin: 6px 0; color: var(--gray-800); }
+    .feature-info-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--gray-200); }
+    @media (max-width: 480px) { .feature-info-dialog { max-width: 95%; } .feature-info-modal { padding-top: 140px; } }
+    `;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'featureInfoModal';
+    modal.className = 'feature-info-modal';
+    modal.innerHTML = `
+        <div class="feature-info-backdrop"></div>
+        <div class="feature-info-dialog">
+            <div class="feature-info-header">
+                <h3 id="featureInfoTitle" class="section-title" style="margin: 0;"></h3>
+            </div>
+            <div class="feature-info-body">
+                <p id="featureInfoDesc"></p>
+                <ul id="featureInfoList" class="feature-info-list"></ul>
+            </div>
+            <div class="feature-info-actions">
+                <button id="featureInfoClose" class="btn btn-outline"><i class="fas fa-times"></i> Cerrar</button>
+                <button id="featureInfoGoRegistro" class="btn btn-primary" style="display:none"><i class="fas fa-paw"></i> Ir a Registro</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelector('.feature-info-backdrop').addEventListener('click', hideFeatureInfoModal);
+    document.getElementById('featureInfoClose').addEventListener('click', hideFeatureInfoModal);
+    document.getElementById('featureInfoGoRegistro').addEventListener('click', function() {
+        hideFeatureInfoModal();
+        showSection('registro');
+    });
+}
+
+function showFeatureInfoModal(info) {
+    ensureFeatureInfoModal();
+    const modal = document.getElementById('featureInfoModal');
+    const titleEl = document.getElementById('featureInfoTitle');
+    const descEl = document.getElementById('featureInfoDesc');
+    const listEl = document.getElementById('featureInfoList');
+    const goBtn = document.getElementById('featureInfoGoRegistro');
+
+    titleEl.textContent = info.title || 'Información';
+    descEl.textContent = info.description || '';
+    listEl.innerHTML = '';
+    (info.points || []).forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = p;
+        listEl.appendChild(li);
+    });
+    goBtn.style.display = info.showGoRegistro ? '' : 'none';
+
+    modal.style.display = 'flex';
+}
+
+function hideFeatureInfoModal() {
+    const modal = document.getElementById('featureInfoModal');
+    if (modal) modal.style.display = 'none';
+}
 
