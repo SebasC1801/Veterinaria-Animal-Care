@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="base :: head">
+        <title>Registro de Mascotas - Veterinaria Patrones</title>
+    </th:block>
+</head>
+<body>
+    <th:block th:replace="base :: header"></th:block>
+    
+    <main class="main">
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">Registro de Nueva Mascota</h1>
+                    <p class="card-subtitle">Complete la información para registrar una nueva mascota en el sistema</p>
+                </div>
+
+                <!-- Mensajes de éxito/error -->
+                <div th:if="${success}" class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span th:text="${success}">Éxito</span>
+                </div>
+                
+                <div th:if="${error}" class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span th:text="${error}">Error</span>
+                </div>
+
+                <form th:action="@{/registro}" method="post" class="registro-form">
+                    <!-- Información del Animal -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-paw"></i>
+                            Información del Animal
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="family_type">Tipo de Familia *</label>
+                                <select class="form-control form-select" id="family_type" name="familyType" required>
+                                    <option value="">Seleccione una familia</option>
+                                    <option value="domestic">Doméstica</option>
+                                    <option value="exotic">Exótica</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="animal_type">Tipo de Animal *</label>
+                                <select class="form-control form-select" id="animal_type" name="animalType" required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="dog">Perro</option>
+                                    <option value="cat">Gato</option>
+                                    <option value="bird">Ave</option>
+                                    <option value="reptile">Reptil</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="breed">Raza *</label>
+                                <input type="text" class="form-control" id="breed" name="breed" 
+                                       placeholder="Ej: Labrador, Persa, Canario..." required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="name">Nombre de la Mascota *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="Ej: Max, Luna, Piolín..." required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="age">Edad (años) *</label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       min="0" max="30" placeholder="Ej: 3" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Propietario -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-user"></i>
+                            Información del Propietario
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="owner_name">Nombre del Propietario *</label>
+                                <input type="text" class="form-control" id="owner_name" name="ownerName" 
+                                       placeholder="Ej: Juan Pérez" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="owner_phone">Teléfono</label>
+                                <input type="tel" class="form-control" id="owner_phone" name="ownerPhone" 
+                                       placeholder="Ej: +57 300 123 4567">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="owner_email">Email</label>
+                                <input type="email" class="form-control" id="owner_email" name="ownerEmail" 
+                                       placeholder="Ej: juan@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="emergency_contact">Contacto de Emergencia</label>
+                                <input type="text" class="form-control" id="emergency_contact" name="emergencyContact" 
+                                       placeholder="Ej: María Pérez - +57 300 987 6543">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i>
+                            Registrar Mascota
+                        </button>
+                        <a th:href="@{/registros}" class="btn btn-outline btn-lg">
+                            <i class="fas fa-list"></i>
+                            Ver Registros
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <th:block th:replace="base :: footer"></th:block>
+</body>
+</html>

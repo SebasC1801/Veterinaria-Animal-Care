@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="base :: head">
+        <title>Test - Veterinaria Patrones</title>
+    </th:block>
+</head>
+<body>
+    <th:block th:replace="base :: header"></th:block>
+    
+    <main class="main">
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">Test de la Aplicación</h1>
+                </div>
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span th:text="${message}">Mensaje</span>
+                </div>
+                
+                <div class="text-center">
+                    <p><strong>Timestamp:</strong> <span th:text="${timestamp}">Fecha</span></p>
+                    <p><strong>Estado:</strong> ✅ Aplicación funcionando correctamente</p>
+                </div>
+                
+                <div class="form-actions">
+                    <a th:href="@{/}" class="btn btn-primary">
+                        <i class="fas fa-home"></i>
+                        Ir al Inicio
+                    </a>
+                    <a th:href="@{/registro-simple}" class="btn btn-outline">
+                        <i class="fas fa-plus-circle"></i>
+                        Registro Simple
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <th:block th:replace="base :: footer"></th:block>
+</body>
+</html>

@@ -1,0 +1,86 @@
+[
+  {
+    "record_id": "PET_20250925174539_TOBY ",
+    "created_at": "2025-09-25T17:45:39.219988",
+    "updated_at": "2025-09-25T17:45:39.219936",
+    "animal_info": {
+      "name": "Toby ",
+      "age": 1,
+      "breed": "Frenchpuddle",
+      "owner_name": "Sebastian",
+      "animal_type": "Perro",
+      "created_at": "2025-09-25T17:45:39.219907",
+      "vaccinations": [],
+      "medical_history": [],
+      "special_care_requirements": [
+        "Cuidados domésticos estándar",
+        "Socialización con humanos"
+      ],
+      "care_instructions": [
+        "Ejercicio diario mínimo 30 minutos",
+        "Cepillado de dientes 2-3 veces por semana",
+        "Baño cada 4-6 semanas",
+        "Corte de uñas mensual",
+        "Revisión de orejas semanal",
+        "Socialización regular con otros perros"
+      ],
+      "common_diseases": [
+        "Parvovirus",
+        "Moquillo",
+        "Hepatitis canina",
+        "Rabia",
+        "Leptospirosis",
+        "Bordetella (tos de las perreras)",
+        "Dermatitis",
+        "Obesidad",
+        "Artritis",
+        "Problemas dentales"
+      ],
+      "feeding_schedule": {
+        "frequency": "2-3 veces al día",
+        "amount_per_meal": "Según peso y edad",
+        "water_access": "Libre acceso",
+        "special_considerations": [
+          "Evitar chocolate, uvas, cebollas",
+          "No dar huesos cocidos",
+          "Considerar edad y nivel de actividad"
+        ],
+        "supplements": [
+          "Omega-3 para pelaje",
+          "Glucosamina para articulaciones (seniors)"
+        ]
+      }
+    },
+    "owner_info": {
+      "name": "Sebastian",
+      "phone": "3233147621",
+      "email": "johnsbeltran9@gmail.com",
+      "address": "Cra 22 # 30 - 63",
+      "emergency_contact": "3146902184",
+      "registration_date": "2025-09-25T17:45:39.219915"
+    },
+    "medical_info": {
+      "weight": 20.0,
+      "vaccination_status": "Al día",
+      "spayed_neutered": true,
+      "allergies": [
+        "No"
+      ],
+      "chronic_conditions": [
+        "No"
+      ],
+      "last_checkup": null,
+      "medical_notes": []
+    },
+    "administrative_info": {
+      "registration_date": "2025-09-25T17:45:39.219933",
+      "veterinarian_id": null,
+      "insurance_info": {},
+      "payment_method": "Efectivo",
+      "status": "active",
+      "notes": []
+    },
+    "additional_info": {},
+    "id": 1
+  }
+]

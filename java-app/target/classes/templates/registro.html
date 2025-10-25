@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="base :: head">
+        <title>Registro de Mascotas - Veterinaria Patrones</title>
+    </th:block>
+</head>
+<body>
+    <th:block th:replace="base :: header"></th:block>
+    
+    <main class="main">
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">Registro de Nueva Mascota</h1>
+                    <p class="card-subtitle">Complete la información para registrar una nueva mascota en el sistema</p>
+                </div>
+
+                <form id="registroForm" class="registro-form">
+                    <!-- Información del Animal -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-paw"></i>
+                            Información del Animal
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="family_type">Tipo de Familia *</label>
+                                <select class="form-control form-select" id="family_type" name="familyType" required>
+                                    <option value="">Seleccione una familia</option>
+                                    <option th:each="familyType : ${options.familyTypes}" 
+                                            th:value="${familyType}" 
+                                            th:text="${familyType == 'domestic' ? 'Doméstica' : 'Exótica'}">
+                                        Doméstica
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="animal_type">Tipo de Animal *</label>
+                                <select class="form-control form-select" id="animal_type" name="animalType" required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option th:each="animalType : ${options.animalTypes}" 
+                                            th:value="${animalType}" 
+                                            th:text="${animalType == 'perro' ? 'Perro' : animalType == 'gato' ? 'Gato' : animalType == 'ave' ? 'Ave' : 'Reptil'}">
+                                        Perro
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="animal_name">Nombre del Animal *</label>
+                                <input type="text" class="form-control" id="animal_name" name="name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="animal_age">Edad (años) *</label>
+                                <input type="number" class="form-control" id="animal_age" name="age" min="0" max="50" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="animal_breed">Raza *</label>
+                                <select class="form-control form-select" id="animal_breed" name="breed" required>
+                                    <option value="">Seleccione una raza</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="owner_name">Nombre del Dueño *</label>
+                                <input type="text" class="form-control" id="owner_name" name="ownerName" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Dueño -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-user"></i>
+                            Información del Dueño
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="owner_phone">Teléfono *</label>
+                                <input type="tel" class="form-control" id="owner_phone" name="ownerPhone" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="owner_email">Email</label>
+                                <input type="email" class="form-control" id="owner_email" name="ownerEmail">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="owner_address">Dirección</label>
+                                <input type="text" class="form-control" id="owner_address" name="ownerAddress">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="emergency_contact">Contacto de Emergencia</label>
+                                <input type="tel" class="form-control" id="emergency_contact" name="emergencyContact">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Médica -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-stethoscope"></i>
+                            Información Médica
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="weight">Peso (kg) *</label>
+                                <input type="number" class="form-control" id="weight" name="weight" step="0.1" min="0" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="vaccination_status">Estado de Vacunación *</label>
+                                <select class="form-control form-select" id="vaccination_status" name="vaccinationStatus" required>
+                                    <option value="">Seleccione estado</option>
+                                    <option th:each="status : ${options.vaccinationStatuses}" 
+                                            th:value="${status}" 
+                                            th:text="${status}">
+                                        Al día
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="spayed_neutered" name="spayedNeutered">
+                                    <label class="form-check-label" for="spayed_neutered">Esterilizado/Castrado</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="allergies">Alergias</label>
+                                <input type="text" class="form-control" id="allergies" name="allergies" placeholder="Separadas por comas">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="chronic_conditions">Condiciones Crónicas</label>
+                                <input type="text" class="form-control" id="chronic_conditions" name="chronicConditions" placeholder="Separadas por comas">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Administrativa -->
+                    <div class="form-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            Información Administrativa
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="veterinarian_id">ID Veterinario</label>
+                                <input type="number" class="form-control" id="veterinarian_id" name="veterinarianId">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="payment_method">Método de Pago</label>
+                                <select class="form-control form-select" id="payment_method" name="paymentMethod">
+                                    <option th:each="method : ${options.paymentMethods}" 
+                                            th:value="${method}" 
+                                            th:text="${method}">
+                                        Efectivo
+                                    </option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="insurance_info">Información de Seguro</label>
+                                <input type="text" class="form-control" id="insurance_info" name="insuranceInfo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i>
+                            Crear Registro
+                        </button>
+                        <button type="button" class="btn btn-outline btn-lg" onclick="limpiarFormulario()">
+                            <i class="fas fa-eraser"></i>
+                            Limpiar Formulario
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="validarFormulario()">
+                            <i class="fas fa-check-circle"></i>
+                            Validar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Modal de Información del Animal -->
+            <div id="animalInfoModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Información del Tipo de Animal</h3>
+                        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="animalInfoContent">
+                            <!-- Contenido dinámico -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <th:block th:replace="base :: footer"></th:block>
+    
+    <th:block th:fragment="extra-css">
+        <style>
+            .registro-form {
+                max-width: 100%;
+            }
+
+            .form-section {
+                margin-bottom: var(--spacing-8);
+                padding: var(--spacing-6);
+                background: var(--gray-50);
+                border-radius: var(--border-radius-lg);
+                border-left: 4px solid var(--primary-color);
+            }
+
+            .section-title {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-3);
+                font-size: var(--font-size-xl);
+                font-weight: 600;
+                color: var(--gray-800);
+                margin-bottom: var(--spacing-6);
+            }
+
+            .section-title i {
+                color: var(--primary-color);
+                font-size: var(--font-size-lg);
+            }
+
+            .form-actions {
+                display: flex;
+                gap: var(--spacing-4);
+                justify-content: center;
+                margin-top: var(--spacing-8);
+                padding-top: var(--spacing-6);
+                border-top: 1px solid var(--gray-200);
+            }
+
+            @media (max-width: 768px) {
+                .form-actions {
+                    flex-direction: column;
+                }
+                
+                .form-actions .btn {
+                    width: 100%;
+                }
+            }
+
+            .form-group {
+                position: relative;
+            }
+
+            .form-group.required::after {
+                content: '*';
+                color: var(--danger-color);
+                position: absolute;
+                right: var(--spacing-2);
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            .form-control:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            }
+
+            .form-control:invalid {
+                border-color: var(--danger-color);
+            }
+
+            .form-control:valid {
+                border-color: var(--success-color);
+            }
+
+            /* Animaciones */
+            .form-section {
+                animation: slideInUp 0.5s ease;
+            }
+
+            @keyframes slideInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Loading state */
+            .btn.loading {
+                position: relative;
+                color: transparent;
+            }
+
+            .btn.loading::after {
+                content: '';
+                position: absolute;
+                width: 16px;
+                height: 16px;
+                top: 50%;
+                left: 50%;
+                margin-left: -8px;
+                margin-top: -8px;
+                border: 2px solid transparent;
+                border-top-color: #ffffff;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+        </style>
+    </th:block>
+    
+    <th:block th:fragment="extra-js">
+        <script>
+            // Datos de opciones disponibles
+            const options = {
+                breedsByAnimalType: {
+                    'perro': /*[[${options.dogBreeds}]]*/ [],
+                    'gato': /*[[${options.catBreeds}]]*/ [],
+                    'ave': /*[[${options.birdBreeds}]]*/ [],
+                    'reptil': /*[[${options.reptileBreeds}]]*/ []
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('registroForm');
+                const animalTypeSelect = document.getElementById('animal_type');
+                const breedSelect = document.getElementById('animal_breed');
+                
+                // Manejar envío del formulario
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    enviarFormulario();
+                });
+                
+                // Actualizar razas cuando cambie el tipo de animal
+                animalTypeSelect.addEventListener('change', function() {
+                    const animalType = this.value;
+                    actualizarRazas(animalType);
+                    
+                    if (animalType) {
+                        mostrarInfoAnimal(animalType);
+                    }
+                });
+            });
+
+            function actualizarRazas(animalType) {
+                const breedSelect = document.getElementById('animal_breed');
+                breedSelect.innerHTML = '<option value="">Seleccione una raza</option>';
+                
+                if (animalType && options.breedsByAnimalType[animalType]) {
+                    options.breedsByAnimalType[animalType].forEach(breed => {
+                        const option = document.createElement('option');
+                        option.value = breed;
+                        option.textContent = breed;
+                        breedSelect.appendChild(option);
+                    });
+                }
+            }
+
+            function enviarFormulario() {
+                const form = document.getElementById('registroForm');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Convertir checkbox a boolean
+                data.spayedNeutered = document.getElementById('spayed_neutered').checked;
+                
+                // Convertir alergias y condiciones crónicas a arrays
+                if (data.allergies) {
+                    data.allergies = data.allergies.split(',').map(a => a.trim()).filter(a => a);
+                }
+                if (data.chronicConditions) {
+                    data.chronicConditions = data.chronicConditions.split(',').map(c => c.trim()).filter(c => c);
+                }
+                
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                fetch('/api/registro', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarToast('success', data.message);
+                        limpiarFormulario();
+                    } else {
+                        mostrarToast('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarToast('error', 'Error al enviar el formulario');
+                })
+                .finally(() => {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                });
+            }
+
+            function limpiarFormulario() {
+                document.getElementById('registroForm').reset();
+                document.getElementById('animal_breed').innerHTML = '<option value="">Seleccione una raza</option>';
+                mostrarToast('info', 'Formulario limpiado');
+            }
+
+            function validarFormulario() {
+                const form = document.getElementById('registroForm');
+                const requiredFields = form.querySelectorAll('[required]');
+                let isValid = true;
+                let errors = [];
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        errors.push(`${field.previousElementSibling.textContent} es requerido`);
+                        field.classList.add('invalid');
+                    } else {
+                        field.classList.remove('invalid');
+                    }
+                });
+                
+                if (isValid) {
+                    mostrarToast('success', 'El formulario es válido');
+                } else {
+                    mostrarToast('warning', `Errores encontrados: ${errors.join(', ')}`);
+                }
+            }
+
+            function mostrarInfoAnimal(animalType) {
+                fetch(`/api/animales/info/${animalType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            mostrarToast('error', data.error);
+                            return;
+                        }
+                        
+                        const modal = document.getElementById('animalInfoModal');
+                        const content = document.getElementById('animalInfoContent');
+                        
+                        content.innerHTML = `
+                            <h4>${data.animalType}</h4>
+                            <p><strong>Cuidados específicos:</strong></p>
+                            <ul>
+                                ${data.careInstructions.slice(0, 3).map(instruction => `<li>${instruction}</li>`).join('')}
+                            </ul>
+                            <p><strong>Enfermedades comunes:</strong></p>
+                            <ul>
+                                ${data.commonDiseases.slice(0, 3).map(disease => `<li>${disease}</li>`).join('')}
+                            </ul>
+                            <p><strong>Horario de alimentación:</strong> ${data.feedingSchedule.frequency}</p>
+                        `;
+                        
+                        modal.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        mostrarToast('error', 'Error al obtener información del animal');
+                    });
+            }
+
+            function cerrarModal() {
+                document.getElementById('animalInfoModal').style.display = 'none';
+            }
+
+            // Cerrar modal al hacer clic fuera
+            window.onclick = function(event) {
+                const modal = document.getElementById('animalInfoModal');
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        </script>
+    </th:block>
+</body>
+</html>
