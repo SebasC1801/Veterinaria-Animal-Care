@@ -1888,7 +1888,15 @@ body {
 
 /* Banner User Info Styles */
 .banner-user-info {
+    display: none; /* Oculto por defecto */
     margin: 1.5rem 0;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.banner-user-info.visible {
+    display: block; /* Visible cuando se añade la clase */
+    opacity: 1;
 }
 
 .banner-user-welcome {

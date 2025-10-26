@@ -1826,6 +1826,27 @@ function showMessage(message, type = 'info') {
     }, 3000);
 }
 
+function updateUserInfo() {
+    try {
+        const infoContainer = document.getElementById('userInfo') || document.querySelector('.banner-user-info');
+        const nameEl = document.getElementById('userName');
+        const roleEl = document.getElementById('userRole');
+        const current = authSystem && authSystem.getCurrentUser ? authSystem.getCurrentUser() : null;
+        if (!infoContainer || !nameEl || !roleEl) return;
+        if (current) {
+            nameEl.textContent = current.name || '';
+            roleEl.textContent = (authSystem && authSystem.getRoleDisplayName) ? authSystem.getRoleDisplayName(current.role) : (current.role || '');
+            infoContainer.classList.add('visible');
+        } else {
+            nameEl.textContent = '';
+            roleEl.textContent = '';
+            infoContainer.classList.remove('visible');
+        }
+    } catch (e) {
+        console.error('Error actualizando info de usuario en banner:', e);
+    }
+}
+
 // ====== AUTH HANDLERS & UI INIT ======
 function showRegisterForm() {
     const loginForm = document.getElementById('loginForm');
@@ -1887,6 +1908,7 @@ function handleLogin(event) {
         applyHeaderOffset();
         setupMobileMenuHandlers();
         configureNavigation();
+        updateUserInfo();
         const nextSection = (user.role === 'user') ? 'registro' : 'inicio';
         showSection(nextSection);
         updatePetsList();
@@ -1944,6 +1966,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authContainer) authContainer.style.display = 'none';
         if (header) header.style.display = 'block';
         if (main) main.style.display = 'block';
+        updateUserInfo();
         const nextSection = (current.role === 'user') ? 'registro' : 'inicio';
         showSection(nextSection);
         updatePetsList();
@@ -1951,6 +1974,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showMessage('Sesión restaurada para ' + current.name, 'success');
     } else {
         showLoginForm();
+        updateUserInfo();
     }
 });
 
