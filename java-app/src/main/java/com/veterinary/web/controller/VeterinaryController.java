@@ -98,153 +98,17 @@ public class VeterinaryController {
         return "add-appointment";
     }
     
-    /**
-     * Página de demostración de patrones.
-     */
-    @GetMapping("/patterns")
-    public String patterns() {
-        return "patterns";
-    }
+    // Página de demostración de patrones eliminada
     
-    /**
-     * API para demostrar el patrón Singleton.
-     */
-    @GetMapping("/api/patterns/singleton")
-    @ResponseBody
-    public Map<String, Object> demonstrateSingleton() {
-        Map<String, Object> result = new HashMap<>();
-        VeterinarySystem system1 = VeterinarySystem.getInstance();
-        VeterinarySystem system2 = VeterinarySystem.getInstance();
-        
-        result.put("system1", system1.toString());
-        result.put("system2", system2.toString());
-        result.put("sameInstance", system1 == system2);
-        result.put("clinicName", system1.getSystemInfo().get("clinic_name"));
-        
-        return result;
-    }
+    // Endpoints de demostración de patrones eliminados
     
-    /**
-     * API para demostrar el patrón Factory Method.
-     */
-    @GetMapping("/api/patterns/factory")
-    @ResponseBody
-    public Map<String, Object> demonstrateFactory() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            Animal dog = AnimalFactory.createAnimal("perro", "Max", 3, "Labrador", "Juan Pérez");
-            Animal cat = AnimalFactory.createAnimal("gato", "Luna", 2, "Persa", "María García");
-            
-            result.put("success", true);
-            result.put("dog", dog.toString());
-            result.put("cat", cat.toString());
-            result.put("dogCare", dog.getSpecificCareInstructions());
-            result.put("catDiseases", cat.getCommonDiseases());
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-        }
-        
-        return result;
-    }
     
-    /**
-     * API para demostrar el patrón Abstract Factory.
-     */
-    @GetMapping("/api/patterns/abstract-factory")
-    @ResponseBody
-    public Map<String, Object> demonstrateAbstractFactory() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            Animal domesticDog = PetFamilyFactoryManager.createPet("domestic", "perro", "Buddy", 4, "Golden Retriever", "Ana Martín");
-            Animal exoticBird = PetFamilyFactoryManager.createPet("exotic", "ave", "Kiwi", 2, "Guacamayo", "Roberto Silva");
-            
-            result.put("success", true);
-            result.put("domesticDog", domesticDog.toString());
-            result.put("exoticBird", exoticBird.toString());
-            result.put("domesticInfo", PetFamilyFactoryManager.getFamilyInfo("domestic"));
-            result.put("exoticInfo", PetFamilyFactoryManager.getFamilyInfo("exotic"));
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-        }
-        
-        return result;
-    }
     
-    /**
-     * API para demostrar el patrón Builder.
-     */
-    @GetMapping("/api/patterns/builder")
-    @ResponseBody
-    public Map<String, Object> demonstrateBuilder() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            PetRecordBuilder builder = new PetRecordBuilder();
-            List<String> allergies = new ArrayList<>();
-            allergies.add("Polen");
-            
-            List<String> diseases = new ArrayList<>();
-            diseases.add("Artritis");
-            
-            PetRecord record = builder
-                .setAnimalWithFamily("domestic", "perro", "Rex", 5, "Pastor Alemán", "Laura Torres")
-                .setOwnerInfo("Laura Torres", "3001234567", "laura@email.com", "Calle 123", "3007654321")
-                .setMedicalInfo(25.5, "Al día", true, allergies, diseases)
-                .setAdministrativeInfo(1, "Tarjeta")
-                .build();
-            
-            result.put("success", true);
-            result.put("record", record.toString());
-            result.put("animal", record.getAnimal().getName() + " (" + record.getAnimal().getBreed() + ")");
-            result.put("owner", record.getOwnerName());
-            result.put("contact", record.getOwnerPhone());
-            result.put("weight", record.getWeight());
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-        }
-        
-        return result;
-    }
     
-    /**
-     * API para demostrar el patrón Prototype.
-     */
-    @GetMapping("/api/patterns/prototype")
-    @ResponseBody
-    public Map<String, Object> demonstratePrototype() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            // Crear prototipo original
-            MedicalRecord original = new MedicalRecord("Max", "Infección respiratoria", "Antibióticos", "Dr. Juan Pérez");
-            original.addMedication("Amoxicilina 250mg");
-            original.addMedication("Antiinflamatorio");
-            original.addObservation("Mejora notable después de 3 días");
-            
-            // Clonar el prototipo
-            MedicalRecord clone = original.clone();
-            clone.setPetName("Rex");
-            clone.addObservation("Seguimiento necesario en 7 días");
-            
-            result.put("success", true);
-            result.put("original", original.toString());
-            result.put("originalMedications", original.getMedications());
-            result.put("originalObservations", original.getObservations());
-            result.put("clone", clone.toString());
-            result.put("cloneMedications", clone.getMedications());
-            result.put("cloneObservations", clone.getObservations());
-        } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-        }
-        
-        return result;
-    }
+    
+    
+    
+    
     
     /**
      * Página de error.

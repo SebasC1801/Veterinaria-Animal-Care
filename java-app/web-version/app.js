@@ -14,9 +14,9 @@ class AuthenticationSystem {
         this.currentUser = null;
         this.loadUsersFromStorage();
         
-        // Define role permissions
+        // Define role permissions (solo: veterinarian, user)
         this.rolePermissions = {
-            admin: {
+            veterinarian: {
                 canManageUsers: true,
                 canManagePets: true,
                 canManageAppointments: true,
@@ -24,15 +24,6 @@ class AuthenticationSystem {
                 canDeletePets: true,
                 canViewAllData: true,
                 canManageSystem: true
-            },
-            employee: {
-                canManageUsers: false,
-                canManagePets: true,
-                canManageAppointments: true,
-                canSetAppointmentPriority: true,
-                canDeletePets: false,
-                canViewAllData: true,
-                canManageSystem: false
             },
             user: {
                 canManageUsers: false,
@@ -56,29 +47,20 @@ class AuthenticationSystem {
         const defaultUsers = [
             {
                 id: 1,
-                name: "Administrador",
-                email: "admin@veterinaria.com",
-                password: "admin123",
-                role: "admin",
+                name: "Dr. García",
+                email: "dr.garcia@veterinaria.com",
+                password: "veterinario123",
+                role: "veterinarian",
                 phone: "+57 300 000 0001",
                 createdAt: new Date().toISOString()
             },
             {
                 id: 2,
-                name: "Dr. García",
-                email: "dr.garcia@veterinaria.com",
-                password: "empleado123",
-                role: "employee",
-                phone: "+57 300 000 0002",
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 3,
                 name: "Juan Pérez",
                 email: "juan@email.com",
                 password: "usuario123",
                 role: "user",
-                phone: "+57 300 000 0003",
+                phone: "+57 300 000 0002",
                 createdAt: new Date().toISOString()
             }
         ];
@@ -148,7 +130,7 @@ class AuthenticationSystem {
         const user = this.users.find(u => 
             u.email === email.toLowerCase() && 
             u.password === password && 
-            u.role === role
+            (u.role === role || (role === 'veterinarian' && (u.role === 'employee' || u.role === 'admin')))
         );
 
         if (!user) {
@@ -190,8 +172,7 @@ class AuthenticationSystem {
 
         const roleHierarchy = {
             'user': 1,
-            'employee': 2,
-            'admin': 3
+            'veterinarian': 2
         };
 
         return roleHierarchy[user.role] >= roleHierarchy[requiredRole];
@@ -205,8 +186,7 @@ class AuthenticationSystem {
 
     getRoleDisplayName(role) {
         const roleNames = {
-            admin: 'Administrador',
-            employee: 'Empleado',
+            veterinarian: 'Veterinario',
             user: 'Usuario'
         };
         return roleNames[role] || role;
@@ -229,7 +209,10 @@ class AuthenticationSystem {
         try {
             const stored = localStorage.getItem('veterinaryUsers');
             if (stored) {
-                this.users = JSON.parse(stored);
+                this.users = JSON.parse(stored).map(u => ({
+                    ...u,
+                    role: (u.role === 'admin' || u.role === 'employee') ? 'veterinarian' : u.role
+                }));
                 console.log('✅ Usuarios cargados desde localStorage:', this.users.length, 'usuarios');
             } else {
                 console.log('📝 No hay usuarios guardados en localStorage');

@@ -31,10 +31,9 @@ public class VeterinarySystem {
      */
     private VeterinarySystem() {
         // Inicialización de datos por defecto
-        this.clinicName = "Clínica Veterinaria Patrones";
-        this.address = "Calle Principal #123";
-        this.phone = "555-1234";
-        this.email = "contacto@clinicapatrones.com";
+        this.clinicName = "Veterinaria AnimalCare";
+        this.phone = "+57 323 314 7621";
+        this.email = "john.ceballosbel@campusucc.edu.co";
         
         // Inicialización de colecciones
         this.petRecords = new ArrayList<>();

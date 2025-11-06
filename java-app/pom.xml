@@ -6,12 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.veterinary</groupId>
-    <artifactId>patterns-veterinary-system</artifactId>
+    <artifactId>veterinary-system</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Veterinary Patterns System</name>
-    <description>Veterinary management system implementing design patterns</description>
+    <name>Veterinary System</name>
+    <description>Veterinary management system</description>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

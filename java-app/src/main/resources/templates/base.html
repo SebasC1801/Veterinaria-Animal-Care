@@ -3,7 +3,7 @@
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - Veterinaria Patrones' : 'Veterinaria Patrones'}">Veterinaria Patrones</title>
+    <title th:text="${title != null ? title + ' - Veterinaria AnimalCare' : 'Veterinaria AnimalCare'}">Veterinaria AnimalCare</title>
     
     <!-- CSS personalizado -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -23,7 +23,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-paw"></i>
-                    <h1>Veterinaria Patrones</h1>
+                    <h1>Veterinaria AnimalCare</h1>
                 </div>
                 <nav class="nav">
                     <a th:href="@{/}" class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/' ? 'active' : ''}">
@@ -35,12 +35,7 @@
                     <a th:href="@{/registros}" class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/registros' ? 'active' : ''}">
                         <i class="fas fa-list"></i> Registros
                     </a>
-                    <a th:href="@{/prototypes}" class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/prototypes' ? 'active' : ''}">
-                        <i class="fas fa-copy"></i> Prototypes
-                    </a>
-                    <a th:href="@{/patrones}" class="nav-link" th:classappend="${#httpServletRequest.requestURI == '/patrones' ? 'active' : ''}">
-                        <i class="fas fa-code"></i> Patrones
-                    </a>
+                    <!-- Enlaces a páginas de patrones eliminados -->
                 </nav>
             </div>
         </div>
@@ -58,28 +53,18 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-info">
-                    <h3>Veterinaria Patrones</h3>
-                    <p>Sistema de gestión veterinaria implementado con patrones de software</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Patrones Implementados</h4>
-                    <ul>
-                        <li>Singleton</li>
-                        <li>Factory Method</li>
-                        <li>Abstract Factory</li>
-                        <li>Builder</li>
-                        <li>Prototype</li>
-                    </ul>
+                    <h3>Veterinaria AnimalCare</h3>
+                    <p>Sistema de gestión veterinaria</p>
                 </div>
                 <div class="footer-contact">
                     <h4>Contacto</h4>
                     <p><i class="fas fa-phone"></i> +57 300 123 4567</p>
-                    <p><i class="fas fa-envelope"></i> info@veterinariapatrones.com</p>
-                    <p><i class="fas fa-map-marker-alt"></i> Calle de los Patrones 123</p>
+                    <p><i class="fas fa-envelope"></i> contacto@animalcare.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Av. Central 123</p>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Veterinaria Patrones. Desarrollado con patrones de software.</p>
+                <p>&copy; 2025 Veterinaria AnimalCare.</p>
             </div>
         </div>
     </footer>

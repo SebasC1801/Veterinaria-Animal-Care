@@ -86,9 +86,8 @@
                         <label class="form-label" for="loginRole">Tipo de Usuario</label>
                         <select class="form-control form-select" id="loginRole" name="role" required>
                             <option value="">Selecciona tu rol</option>
-                            <option value="user">Usuario Común</option>
-                            <option value="employee">Empleado</option>
-                            <option value="admin">Administrador</option>
+                            <option value="user">Usuario</option>
+                            <option value="veterinarian">Veterinario</option>
                         </select>
                     </div>
                     
@@ -144,9 +143,8 @@
                     <label class="form-label" for="registerRole">Tipo de Usuario *</label>
                     <select class="form-control form-select" id="registerRole" name="role" required>
                         <option value="">Selecciona tu rol</option>
-                        <option value="user">Usuario Común</option>
-                        <option value="employee">Empleado</option>
-                        <option value="admin">Administrador</option>
+                        <option value="user">Usuario</option>
+                        <option value="veterinarian">Veterinario</option>
                     </select>
                 </div>
                 
@@ -271,7 +269,7 @@
                                     </div>
                                     <div class="feature-content">
                                         <h3>Citas Médicas</h3>
-                                        <p>Organiza y programa citas médicas con diferentes niveles de prioridad. Los administradores y empleados pueden gestionar la agenda completa, asignar veterinarios y establecer prioridades según la urgencia.</p>
+                                        <p>Organiza y programa citas médicas con diferentes niveles de prioridad. Los veterinarios pueden gestionar la agenda completa, asignar profesionales y establecer prioridades según la urgencia.</p>
                                     </div>
                                 </div>
                                 
@@ -281,7 +279,7 @@
                                     </div>
                                     <div class="feature-content">
                                         <h3>Control de Accesos</h3>
-                                        <p>Sistema de roles diferenciado: Administradores tienen acceso completo, empleados pueden gestionar citas y consultas, y usuarios pueden registrar mascotas y ver su información personal.</p>
+                                        <p>Sistema de roles: los veterinarios gestionan citas y consultas; los usuarios registran mascotas y ven su información.</p>
                                     </div>
                                 </div>
                                 
@@ -843,7 +841,8 @@
     </div>
 
     <!-- Modal de edición de citas -->
-    <div id="editAppointmentModal" class="modal" style="display: none;">
+    <!-- Editor modal deshabilitado: se usa editor inline en su lugar -->
+    <div id="editAppointmentModal" class="modal" hidden aria-hidden="true" style="display: none !important; pointer-events: none !important;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3><i class="fas fa-edit"></i> Editar Cita Médica</h3>

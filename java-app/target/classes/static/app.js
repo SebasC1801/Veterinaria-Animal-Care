@@ -14,9 +14,9 @@ class AuthenticationSystem {
         this.currentUser = null;
         this.loadUsersFromStorage();
         
-        // Define role permissions
+        // Define role permissions (solo: veterinarian, user)
         this.rolePermissions = {
-            admin: {
+            veterinarian: {
                 canManageUsers: true,
                 canManagePets: true,
                 canRegisterPets: true,
@@ -25,16 +25,6 @@ class AuthenticationSystem {
                 canDeletePets: true,
                 canViewAllData: true,
                 canManageSystem: true
-            },
-            employee: {
-                canManageUsers: false,
-                canManagePets: true,
-                canRegisterPets: true,
-                canManageAppointments: true,
-                canSetAppointmentPriority: true,
-                canDeletePets: false,
-                canViewAllData: true,
-                canManageSystem: false
             },
             user: {
                 canManageUsers: false,
@@ -59,29 +49,20 @@ class AuthenticationSystem {
         const defaultUsers = [
             {
                 id: 1,
-                name: "Administrador",
-                email: "admin@veterinaria.com",
-                password: "admin123",
-                role: "admin",
+                name: "Dr. García",
+                email: "dr.garcia@veterinaria.com",
+                password: "veterinario123",
+                role: "veterinarian",
                 phone: "+57 300 000 0001",
                 createdAt: new Date().toISOString()
             },
             {
                 id: 2,
-                name: "Dr. García",
-                email: "dr.garcia@veterinaria.com",
-                password: "empleado123",
-                role: "employee",
-                phone: "+57 300 000 0002",
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 3,
                 name: "Juan Pérez",
                 email: "juan@email.com",
                 password: "usuario123",
                 role: "user",
-                phone: "+57 300 000 0003",
+                phone: "+57 300 000 0002",
                 createdAt: new Date().toISOString()
             }
         ];
@@ -151,7 +132,7 @@ class AuthenticationSystem {
         const user = this.users.find(u => 
             u.email === email.toLowerCase() && 
             u.password === password && 
-            u.role === role
+            (u.role === role || (role === 'veterinarian' && (u.role === 'employee' || u.role === 'admin')))
         );
 
         if (!user) {
@@ -193,8 +174,7 @@ class AuthenticationSystem {
 
         const roleHierarchy = {
             'user': 1,
-            'employee': 2,
-            'admin': 3
+            'veterinarian': 2
         };
 
         return roleHierarchy[user.role] >= roleHierarchy[requiredRole];
@@ -208,8 +188,7 @@ class AuthenticationSystem {
 
     getRoleDisplayName(role) {
         const roleNames = {
-            admin: 'Administrador',
-            employee: 'Empleado',
+            veterinarian: 'Veterinario',
             user: 'Usuario'
         };
         return roleNames[role] || role;
@@ -232,7 +211,10 @@ class AuthenticationSystem {
         try {
             const stored = localStorage.getItem('veterinaryUsers');
             if (stored) {
-                this.users = JSON.parse(stored);
+                this.users = JSON.parse(stored).map(u => ({
+                    ...u,
+                    role: (u.role === 'admin' || u.role === 'employee') ? 'veterinarian' : u.role
+                }));
                 console.log('✅ Usuarios cargados desde localStorage:', this.users.length, 'usuarios');
             } else {
                 console.log('📝 No hay usuarios guardados en localStorage');
@@ -1058,16 +1040,7 @@ class VeterinarySystem {
         return pet;
     }
 
-    // Prototype Pattern - Clonar mascotas
-    clonePet(originalPet, newName) {
-        const cloned = {
-            ...originalPet,
-            id: this.nextId++,
-            name: newName,
-            registrationDate: new Date().toISOString()
-        };
-        return cloned;
-    }
+    
 
     // Métodos de gestión
     registerPet(pet) {
@@ -1383,6 +1356,438 @@ function showSection(sectionId) {
     }
 }
 
+// ====== SECCIONES: Citas y Consultas ======
+function showAppointmentsSection() {
+    // Gating por permisos
+    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+        const info = getFeatureInfoData('Citas Médicas');
+        showFeatureInfoModal(info);
+        return;
+    }
+    showSection('citas-medicas');
+    // Actualizar estadísticas y listado al entrar
+    updateAppointmentStats();
+    renderAppointmentsList();
+}
+
+function showConsultationForm() {
+    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+        const info = getFeatureInfoData('Gestión de Consultas');
+        showFeatureInfoModal(info);
+        return;
+    }
+    const form = document.getElementById('consultationForm');
+    const list = document.getElementById('consultationList');
+    if (form) form.style.display = 'block';
+    if (list) list.style.display = 'none';
+    // Poblar mascotas en el select
+    populateConsultationPets();
+    // Mostrar prioridad solo si el rol lo permite
+    const priorityGroup = document.getElementById('priorityGroup');
+    if (priorityGroup) {
+        const canSetPriority = authSystem && authSystem.hasPermission('canSetAppointmentPriority');
+        priorityGroup.style.display = canSetPriority ? 'block' : 'none';
+    }
+}
+
+function hideConsultationForm() {
+    const form = document.getElementById('consultationForm');
+    if (form) form.style.display = 'none';
+}
+
+function showConsultationList() {
+    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+        const info = getFeatureInfoData('Gestión de Consultas');
+        showFeatureInfoModal(info);
+        return;
+    }
+    const form = document.getElementById('consultationForm');
+    const list = document.getElementById('consultationList');
+    if (form) form.style.display = 'none';
+    if (list) list.style.display = 'block';
+    renderConsultationsList();
+}
+
+// ====== Citas Médicas (usa datos de ConsultationSystem) ======
+function renderAppointmentsList(filtered = null) {
+    const tbody = document.getElementById('appointmentsTableBody');
+    if (!tbody) return;
+    const data = filtered || (consultationSystem ? consultationSystem.getConsultations() : []);
+    tbody.innerHTML = '';
+    if (!data.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 10;
+        td.className = 'text-center';
+        td.textContent = 'No hay citas programadas';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+    data.forEach(c => {
+        const pet = veterinarySystem ? veterinarySystem.getPetById(c.petId) : null;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${pet?.name || '-'}</td>
+            <td>${pet?.owner?.name || '-'}</td>
+            <td>${c.date || '-'}</td>
+            <td>${c.time || '-'}</td>
+            <td>${c.veterinarian || '-'}</td>
+            <td>${c.reason || '-'}</td>
+            <td>${c.priority || 'normal'}</td>
+            <td>${({scheduled:'Programada',completed:'Completada',cancelled:'Cancelada'})[c.status] || (c.status || 'scheduled')}</td>
+            <td>
+                <button type="button" class="btn btn-outline btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar cita ${c.id}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger" onclick="deleteConsultation(${c.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        tr.dataset.appointmentId = String(c.id);
+        tbody.appendChild(tr);
+    });
+
+    // Asegurar delegación de eventos por si falla el inline onclick
+    attachAppointmentTableDelegates();
+}
+
+function applyFilters() {
+    const status = document.getElementById('filterStatus')?.value || '';
+    const vet = document.getElementById('filterVet')?.value || '';
+    const all = consultationSystem ? consultationSystem.getConsultations() : [];
+    const filtered = all.filter(c => {
+        const statusOk = !status || (c.status === status);
+        const vetOk = !vet || (c.veterinarian === vet);
+        return statusOk && vetOk;
+    });
+    renderAppointmentsList(filtered);
+}
+
+function updateAppointmentStats() {
+    const all = consultationSystem ? consultationSystem.getConsultations() : [];
+    const totalEl = document.getElementById('totalAppointments');
+    const pendingEl = document.getElementById('pendingAppointments');
+    const completedEl = document.getElementById('completedAppointments');
+    const urgentEl = document.getElementById('urgentAppointments');
+    if (totalEl) totalEl.textContent = all.length;
+    if (pendingEl) pendingEl.textContent = all.filter(c => c.status === 'scheduled').length;
+    if (completedEl) completedEl.textContent = all.filter(c => c.status === 'completed').length;
+    if (urgentEl) urgentEl.textContent = all.filter(c => c.priority === 'urgent').length;
+}
+
+function openEditAppointmentModal(id) {
+    try {
+        // Forzar editor inline para evitar bloqueos de pantalla y overlays
+        if (typeof hideFeatureInfoModal === 'function') hideFeatureInfoModal();
+        const parsedId = parseInt(id, 10);
+        const finalId = isNaN(parsedId) ? id : parsedId;
+        openInlineAppointmentEditor(finalId);
+    } catch (err) {
+        console.error('Error al abrir la edición inline:', err);
+        showMessage('No se pudo abrir el editor de cita', 'error');
+    }
+}
+
+// Asegura que el modal de edición exista en el DOM (fallback si la plantilla no lo incluye)
+function ensureEditAppointmentModal() {
+    if (document.getElementById('editAppointmentModal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'editAppointmentModal';
+    // Overlay propio para evitar conflictos con estilos globales .modal
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.background = 'rgba(0,0,0,0.5)';
+    modal.style.display = 'none';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '2147483645';
+    modal.innerHTML = `
+        <div class="edit-content" style="background:#fff; width:90%; max-width:520px; max-height:80vh; overflow:auto; border-radius:12px; box-shadow: var(--shadow-lg);">
+            <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--gray-200);">
+                <h3 style="margin:0"><i class="fas fa-edit"></i> Editar Cita Médica</h3>
+                <button class="close-btn" onclick="closeEditAppointmentModal()" style="background:none; border:none; font-size:20px; cursor:pointer">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px">
+                <div class="form-group">
+                    <label class="form-label">Estado actual:</label>
+                    <p id="currentAppointmentStatus" class="current-status"></p>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newAppointmentStatus">Nuevo estado:</label>
+                    <select id="newAppointmentStatus" class="form-control">
+                        <option value="scheduled">Programada</option>
+                        <option value="completed">Completada</option>
+                        <option value="cancelled">Cancelada</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:8px; justify-content:flex-end; padding:12px 16px; border-top:1px solid var(--gray-200);">
+                <button class="btn btn-secondary" onclick="closeEditAppointmentModal()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="saveAppointmentEdit()">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+
+    // Evitar que el click dentro del contenido cierre el modal por delegación
+    const content = modal.querySelector('.edit-content');
+    if (content) {
+        content.addEventListener('click', (ev) => ev.stopPropagation());
+    }
+}
+
+function closeEditAppointmentModal() {
+    const modal = document.getElementById('editAppointmentModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+// Kill-switch: desactiva cualquier overlay/modal/backdrop activo que pueda bloquear la UI
+function killActiveBackdrops() {
+    try {
+        const selectors = ['.modal', '.modal-backdrop', '[class*="backdrop"]', '[class*="overlay"]'];
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                el.style.display = 'none';
+                el.setAttribute('aria-hidden', 'true');
+            });
+        });
+        document.body.style.pointerEvents = 'auto';
+        document.body.style.overflow = '';
+    } catch (_) { /* noop */ }
+}
+
+// Fallback editor inline en la fila de la tabla
+function openInlineAppointmentEditor(id) {
+    try {
+        // Ocultar cualquier modal residual de edición por seguridad
+        const residualModal = document.getElementById('editAppointmentModal');
+        if (residualModal) residualModal.style.display = 'none';
+        killActiveBackdrops();
+        console.log('🔧 Abriendo editor inline para cita:', id);
+        const tbody = document.getElementById('appointmentsTableBody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const row = rows.find(r => parseInt(r.dataset.appointmentId || r.querySelector('td')?.textContent, 10) === id);
+        if (!row) return;
+
+        // Evitar duplicados
+        const existing = row.nextElementSibling;
+        if (existing && existing.classList && existing.classList.contains('inline-editor-row')) return;
+
+        const petName = row.children[1]?.textContent || '-';
+        const currentStatusText = row.children[8]?.textContent || 'Programada';
+
+        const editorRow = document.createElement('tr');
+        editorRow.className = 'inline-editor-row';
+        editorRow.innerHTML = `
+            <td colspan="10" style="background: #fff8e1; padding: 1rem; border: 1px solid #fbbf24; border-radius: 0.5rem;">
+                <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+                    <strong>Editar cita #${id} (${petName})</strong>
+                    <span style="color:#92400e;">Estado actual: ${currentStatusText}</span>
+                    <label for="inlineStatusSelect${id}" style="margin-left:0.5rem;">Nuevo estado:</label>
+                    <select id="inlineStatusSelect${id}" class="form-control" style="max-width:220px;">
+                        <option value="scheduled">Programada</option>
+                        <option value="completed">Completada</option>
+                        <option value="cancelled">Cancelada</option>
+                    </select>
+                    <button class="btn btn-primary" id="inlineSaveBtn${id}"><i class="fas fa-save"></i> Guardar</button>
+                    <button class="btn btn-secondary" id="inlineCancelBtn${id}"><i class="fas fa-times"></i> Cancelar</button>
+                </div>
+            </td>
+        `;
+        row.after(editorRow);
+
+        const select = editorRow.querySelector(`#inlineStatusSelect${id}`);
+        const saveBtn = editorRow.querySelector(`#inlineSaveBtn${id}`);
+        const cancelBtn = editorRow.querySelector(`#inlineCancelBtn${id}`);
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                try {
+                    const newStatus = select?.value || 'scheduled';
+                    if (consultationSystem) consultationSystem.updateConsultationStatus(id, newStatus);
+                    showMessage('Estado de la cita actualizado', 'success');
+                    editorRow.remove();
+                    renderAppointmentsList();
+                    renderConsultationsList();
+                    updateAppointmentStats();
+                } catch (e) {
+                    showMessage('Error al actualizar la cita', 'error');
+                }
+            });
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                editorRow.remove();
+            });
+        }
+    } catch (err) {
+        console.error('Error en editor inline:', err);
+    }
+}
+
+// Delegación segura para botones de edición en la tabla
+function attachAppointmentTableDelegates() {
+    const tbody = document.getElementById('appointmentsTableBody');
+    if (!tbody || tbody._editDelegatesAttached) return;
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.btn-edit-appointment');
+        if (!btn) return;
+        const tr = btn.closest('tr');
+        const idText = btn.dataset.appointmentId || tr?.dataset?.appointmentId || tr?.querySelector('td')?.textContent;
+        const id = parseInt(idText, 10);
+        if (!isNaN(id)) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Click editar capturado (cita):', id);
+            // Guardar contra reentrada en menos de 300ms
+            const now = Date.now();
+            if (!tbody._lastEditTs || (now - tbody._lastEditTs) > 300) {
+                tbody._lastEditTs = now;
+                killActiveBackdrops();
+                requestAnimationFrame(() => openInlineAppointmentEditor(id));
+            }
+        }
+    });
+    tbody._editDelegatesAttached = true;
+}
+
+// Delegación para botones de edición en la lista de consultas
+function attachConsultationTableDelegates() {
+    const tbody = document.getElementById('consultationsTableBody');
+    if (!tbody || tbody._editDelegatesAttached) return;
+    tbody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.btn-edit-appointment');
+        if (!btn) return;
+        const tr = btn.closest('tr');
+        const idText = btn.dataset.appointmentId || tr?.dataset?.appointmentId || tr?.querySelector('td')?.textContent;
+        const id = parseInt(idText, 10);
+        if (!isNaN(id)) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ Click editar capturado (consulta):', id);
+            const now = Date.now();
+            if (!tbody._lastEditTs || (now - tbody._lastEditTs) > 300) {
+                tbody._lastEditTs = now;
+                killActiveBackdrops();
+                requestAnimationFrame(() => openInlineAppointmentEditor(id));
+            }
+        }
+    });
+    tbody._editDelegatesAttached = true;
+}
+
+function saveAppointmentEdit() {
+    const modal = document.getElementById('editAppointmentModal');
+    if (!modal) return;
+    const id = parseInt(modal.dataset.appointmentId, 10);
+    if (isNaN(id)) {
+        showMessage('ID de cita inválido', 'error');
+        return;
+    }
+    const newStatus = document.getElementById('newAppointmentStatus')?.value || 'scheduled';
+    try {
+        if (consultationSystem) consultationSystem.updateConsultationStatus(id, newStatus);
+        showMessage('Estado de la cita actualizado', 'success');
+        closeEditAppointmentModal();
+        renderAppointmentsList();
+        renderConsultationsList();
+        updateAppointmentStats();
+    } catch (e) {
+        showMessage('Error al actualizar la cita', 'error');
+    }
+}
+
+// ====== Consultas (lista y formulario) ======
+function renderConsultationsList() {
+    const tbody = document.getElementById('consultationsTableBody');
+    if (!tbody) return;
+    const data = consultationSystem ? consultationSystem.getConsultations() : [];
+    tbody.innerHTML = '';
+    if (!data.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.className = 'text-center';
+        td.textContent = 'No hay consultas programadas';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+    data.forEach(c => {
+        const pet = veterinarySystem ? veterinarySystem.getPetById(c.petId) : null;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${pet?.name || '-'}</td>
+            <td>${pet?.owner?.name || '-'}</td>
+            <td>${c.date || '-'}</td>
+            <td>${c.time || '-'}</td>
+            <td>${c.veterinarian || '-'}</td>
+            <td>${c.reason || '-'}</td>
+            <td>${({scheduled:'Programada',completed:'Completada',cancelled:'Cancelada'})[c.status] || (c.status || 'scheduled')}</td>
+            <td>
+                <button type="button" class="btn btn-outline btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar consulta ${c.id}"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger" onclick="deleteConsultation(${c.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        tr.dataset.appointmentId = String(c.id);
+        tbody.appendChild(tr);
+    });
+
+    // Asegurar delegación segura para edición
+    attachConsultationTableDelegates();
+}
+
+function deleteConsultation(id) {
+    try {
+        if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+            showMessage('No tienes permiso para eliminar consultas', 'error');
+            return;
+        }
+        if (consultationSystem) consultationSystem.deleteConsultation(id);
+        showMessage('Consulta eliminada', 'success');
+        renderConsultationsList();
+        renderAppointmentsList();
+        updateAppointmentStats();
+    } catch (e) {
+        showMessage('Error al eliminar consulta', 'error');
+    }
+}
+
+function populateConsultationPets() {
+    const petSelect = document.getElementById('consultationPet');
+    const ownerInput = document.getElementById('consultationOwner');
+    if (!petSelect) return;
+    const pets = veterinarySystem ? veterinarySystem.getAllPets() : [];
+    petSelect.innerHTML = '<option value="">Selecciona una mascota</option>';
+    pets.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.name} (${p.owner?.name || 'Sin dueño'})`;
+        petSelect.appendChild(opt);
+    });
+    petSelect.onchange = () => {
+        const id = parseInt(petSelect.value, 10);
+        const pet = veterinarySystem ? veterinarySystem.getPetById(id) : null;
+        if (ownerInput) ownerInput.value = pet?.owner?.name || '';
+    };
+}
+
+// Quick entry desde la tarjeta de inicio
+function showQuickConsultationModal() {
+    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+        const info = getFeatureInfoData('Gestión de Consultas');
+        showFeatureInfoModal(info);
+        return;
+    }
+    // Para simplificar, llevamos a la sección de consultas y abrimos el formulario
+    showSection('consultas');
+    showConsultationForm();
+}
+
 
 function registerPet() {
     console.log('=== INICIANDO REGISTRO DE MASCOTA ===');
@@ -1604,9 +2009,7 @@ function updatePetsList(filterName = null) {
                         <button onclick="editPet(${pet.id})" class="btn btn-primary btn-sm">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="clonePet(${pet.id})" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-copy"></i> Clonar
-                        </button>
+                        
                         <button onclick="deletePet(${pet.id})" class="btn btn-danger btn-sm">
                             <i class="fas fa-trash"></i> Eliminar
                         </button>
@@ -1772,26 +2175,7 @@ function closeEditModal() {
     }
 }
 
-function clonePet(petId) {
-    if (!authSystem || !authSystem.hasPermission('canManagePets')) {
-        showMessage('No tienes permiso para clonar mascotas', 'error');
-        return;
-    }
-    const originalPet = veterinarySystem.getPetById(petId);
-    if (!originalPet) {
-        showMessage('Mascota no encontrada', 'error');
-        return;
-    }
-    
-    const newName = prompt('Ingresa el nuevo nombre para la mascota clonada:', originalPet.name + ' Jr');
-    if (!newName) return;
-    
-    const clonedPet = veterinarySystem.clonePet(originalPet, newName);
-    veterinarySystem.registerPet(clonedPet);
-    
-    showMessage('Mascota clonada exitosamente: ' + clonedPet.name, 'success');
-    updatePetsList();
-}
+// Eliminada funcionalidad de clonado de mascotas
 
 function showSystemStats() {
     console.log('🟢 === MOSTRANDO ESTADÍSTICAS ===');
@@ -1956,6 +2340,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeRegistrationWizard();
     configureNavigation();
 
+    // Wire up envío del formulario de consultas
+    const consultationForm = document.getElementById('consultationFormElement');
+    if (consultationForm) {
+        consultationForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+                showMessage('No tienes permiso para crear consultas', 'error');
+                return;
+            }
+            try {
+                const petId = parseInt(document.getElementById('consultationPet').value, 10);
+                const data = {
+                    petId,
+                    date: document.getElementById('consultationDate').value,
+                    time: document.getElementById('consultationTime').value,
+                    veterinarian: document.getElementById('consultationVet').value,
+                    reason: document.getElementById('consultationReason').value,
+                    description: document.getElementById('consultationDescription').value,
+                    priority: document.getElementById('consultationPriority')?.value || 'normal',
+                    status: 'scheduled'
+                };
+                consultationSystem.createConsultation(data);
+                showMessage('Consulta creada correctamente', 'success');
+                hideConsultationForm();
+                renderConsultationsList();
+                updateAppointmentStats();
+                renderAppointmentsList();
+            } catch (err) {
+                showMessage(err.message || 'Error al crear la consulta', 'error');
+            }
+        });
+    }
+
     // Auto-login if user stored
     const current = authSystem && authSystem.getCurrentUser();
     if (current) {
@@ -1999,7 +2416,7 @@ function getFeatureInfoData(title) {
                 'Asignación de veterinarios y horarios',
                 'Priorización según urgencia (normal, alta, urgente)',
                 'Visualización de estado: programada, completada o cancelada',
-                'Administración disponible para empleados y administradores'
+                'Gestión disponible solo para veterinarios'
             ],
             showGoRegistro: true
         },
@@ -2007,9 +2424,8 @@ function getFeatureInfoData(title) {
             title: 'Control de Accesos',
             description: 'El sistema maneja permisos por rol para proteger tu información y definir acciones disponibles.',
             points: [
-                'Usuario: registrar mascotas',
-                'Empleado: gestionar citas y consultas',
-                'Administrador: acceso completo',
+                'Usuario: registrar mascotas y consultar información',
+                'Veterinario: gestionar citas y consultas',
                 'Acceso basado en permisos específicos por sección'
             ],
             showGoRegistro: true

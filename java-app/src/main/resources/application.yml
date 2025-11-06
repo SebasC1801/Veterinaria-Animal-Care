@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: 8083
   servlet:
     context-path: /
 
 spring:
   application:
-    name: veterinary-patterns-system
+    name: veterinary-system
   
   # Thymeleaf configuration
   thymeleaf:
@@ -39,7 +39,7 @@ spring:
 # Logging configuration
 logging:
   level:
-    com.veterinary.patterns: DEBUG
+    com.veterinary: DEBUG
     org.springframework.web: INFO
     org.hibernate: WARN
   pattern:

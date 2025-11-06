@@ -83,6 +83,8 @@
     </style>
     <!-- Font Awesome (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Estilos completos de la aplicación -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -162,9 +164,8 @@
                         <label class="form-label" for="loginRole">Tipo de Usuario</label>
                         <select class="form-control form-select" id="loginRole" name="role" required>
                             <option value="">Selecciona tu rol</option>
-                            <option value="user">Usuario Común</option>
-                            <option value="employee">Empleado</option>
-                            <option value="admin">Administrador</option>
+                            <option value="user">Usuario</option>
+                            <option value="veterinarian">Veterinario</option>
                         </select>
                     </div>
 
@@ -215,9 +216,8 @@
                         <label class="form-label" for="registerRole">Tipo de Usuario *</label>
                         <select class="form-control form-select" id="registerRole" name="role" required>
                             <option value="">Selecciona tu rol</option>
-                            <option value="user">Usuario Común</option>
-                            <option value="employee">Empleado</option>
-                            <option value="admin">Administrador</option>
+                            <option value="user">Usuario</option>
+                            <option value="veterinarian">Veterinario</option>
                         </select>
                     </div>
 
@@ -337,7 +337,7 @@
                                 </div>
                                 <div class="feature-content">
                                     <h3>Citas Médicas</h3>
-                                    <p>Organiza y programa citas médicas con diferentes niveles de prioridad. Los administradores y empleados pueden gestionar la agenda completa, asignar veterinarios y establecer prioridades según la urgencia.</p>
+                                    <p>Organiza y programa citas médicas con diferentes niveles de prioridad. Los veterinarios pueden gestionar la agenda completa, asignar profesionales y establecer prioridades según la urgencia.</p>
                                 </div>
                             </div>
 
@@ -347,7 +347,7 @@
                                 </div>
                                 <div class="feature-content">
                                     <h3>Control de Accesos</h3>
-                                    <p>Sistema de roles diferenciado: Administradores tienen acceso completo, empleados pueden gestionar citas y consultas, y usuarios pueden registrar mascotas y ver su información personal.</p>
+                                    <p>Sistema de roles: los veterinarios gestionan citas y consultas; los usuarios registran mascotas y ven su información.</p>
                                 </div>
                             </div>
 
@@ -687,8 +687,8 @@
 
                 <div class="card-body">
                     <div class="form-actions">
-                        <button onclick="showConsultationForm()" class="btn btn-primary btn-lg"><i class="fas fa-plus-circle"></i> Nueva Consulta</button>
-                        <button onclick="showConsultationList()" class="btn btn-outline btn-lg"><i class="fas fa-list"></i> Ver Consultas</button>
+                        <a href="javascript:void(0)" onclick="document.getElementById('inicio').style.display='none'; document.getElementById('consultas').style.display='block'; document.getElementById('consultationForm').style.display='block'; document.getElementById('consultationList').style.display='none';" class="btn btn-primary btn-lg"><i class="fas fa-plus-circle"></i> Nueva Consulta</a>
+                <a href="javascript:void(0)" onclick="document.getElementById('inicio').style.display='none'; document.getElementById('consultas').style.display='block'; document.getElementById('consultationForm').style.display='none'; document.getElementById('consultationList').style.display='block';" class="btn btn-outline btn-lg"><i class="fas fa-list"></i> Ver Consultas</a>
                     </div>
 
                     <div id="consultationForm" class="form-section" style="display:none;margin-top:1rem">
@@ -864,8 +864,7 @@
         function ensureDefaults(){
             if(!localStorage.getItem(STORAGE_KEYS.USERS)){
                 const defaultUsers = [
-                    { username:'admin@vet.com', name:'Admin', password:'admin123', role:'admin', phone:''},
-                    { username:'employee@vet.com', name:'Empleado', password:'empleado123', role:'employee', phone:''},
+                    { username:'veterinarian@vet.com', name:'Veterinario', password:'veterinario123', role:'veterinarian', phone:''},
                     { username:'user@vet.com', name:'Usuario', password:'user123', role:'user', phone:''}
                 ];
                 localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
@@ -880,7 +879,7 @@
         // --- Utilidades DOM ---
         function $(sel){ return document.querySelector(sel); }
         function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
-        function show(el){ if(!el) return; el.style.display = ''; }
+        function show(el){ if(!el) return; el.style.display = 'block'; }
         function hide(el){ if(!el) return; el.style.display = 'none'; }
         function showToast(msg, timeout=3000){ 
             const t = document.createElement('div'); t.className='toast'; t.innerText = msg;
@@ -913,10 +912,10 @@
             // if user not logged in and tries to access other than inicio/registro? handled elsewhere
             const sections = $all('main .section');
             sections.forEach(s=> s.classList.remove('active'));
-            sections.forEach(s=> hide(s));
+            sections.forEach(s=> s.style.display = 'none');
             const target = document.getElementById(id);
             if(target){
-                show(target);
+                target.style.display = 'block';
                 target.classList.add('active');
             }
             // update nav active
@@ -976,7 +975,8 @@
             show($('#mainContent'));
             show($('#mainHeader'));
             $('#userName').innerText = sess.name || sess.username;
-            $('#userRole').innerText = (sess.role || '').toUpperCase();
+            const roleMap = { veterinarian: 'Veterinario', user: 'Usuario' };
+            $('#userRole').innerText = roleMap[sess.role] ? roleMap[sess.role] : (sess.role || '').toUpperCase();
             // load pets into selects and table
             renderPetsTable();
             populatePetOptions();
@@ -1170,6 +1170,15 @@
         function applyFilters(){
             renderAppointments();
         }
+        
+        function getAppts(){
+            const stored = localStorage.getItem('veterinary_appointments');
+            return stored ? JSON.parse(stored) : [];
+        }
+        
+        function saveAppts(list){
+            localStorage.setItem('veterinary_appointments', JSON.stringify(list));
+        }
 
         function renderAppointments(){
             const tbody = $('#appointmentsTableBody');
@@ -1200,8 +1209,8 @@
                     <td>${a.time || ''}</td>
                     <td>${a.veterinarian || ''}</td>
                     <td>${a.reason || ''}</td>
-                    <td>${a.priority || ''}</td>
-                    <td>${a.status || ''}</td>
+                    <td><span class="priority-badge ${a.priority}">${getPriorityLabel(a.priority)}</span></td>
+                    <td><span class="status-badge ${a.status}">${getStatusLabel(a.status)}</span></td>
                     <td style="white-space:nowrap">
                         <button class="btn" onclick="openEditAppointmentModal('${a.id}')"><i class="fas fa-edit"></i></button>
                         <button class="btn btn-danger" onclick="deleteAppointment('${a.id}')"><i class="fas fa-trash"></i></button>
@@ -1212,6 +1221,24 @@
             updateAppointmentStats();
         }
 
+        function getPriorityLabel(priority) {
+            const labels = {
+                'normal': 'Normal',
+                'high': 'Alta',
+                'urgent': 'Urgente'
+            };
+            return labels[priority] || priority;
+        }
+        
+        function getStatusLabel(status) {
+            const labels = {
+                'scheduled': 'Programada',
+                'completed': 'Completada',
+                'cancelled': 'Cancelada'
+            };
+            return labels[status] || status;
+        }
+        
         function updateAppointmentStats(){
             const appts = getAppts();
             $('#totalAppointments').innerText = appts.length;
@@ -1245,17 +1272,17 @@
 
         // --- Consultations form handling ---
         function showConsultationForm(){
-            show($('#consultationForm'));
-            hide($('#consultationList'));
+            document.getElementById('consultationForm').style.display = 'block';
+            document.getElementById('consultationList').style.display = 'none';
             populatePetOptions();
         }
         function hideConsultationForm(){
-            hide($('#consultationForm'));
-            show($('#consultationList'));
+            document.getElementById('consultationForm').style.display = 'none';
+            document.getElementById('consultationList').style.display = 'block';
         }
         function showConsultationList(){
-            hide($('#consultationForm'));
-            show($('#consultationList'));
+            document.getElementById('consultationForm').style.display = 'none';
+            document.getElementById('consultationList').style.display = 'block';
         }
         function handleConsultationSubmit(e){
             e.preventDefault();
@@ -1342,6 +1369,45 @@
 
         // expose on window for convenience
         window.showToast = showToast;
+        
+        // Función para mostrar consultas
+        function mostrarConsultas(tipo) {
+            // Ocultar todas las secciones
+            const sections = document.querySelectorAll('main .section');
+            sections.forEach(s => s.style.display = 'none');
+            
+            // Mostrar sección de consultas
+            document.getElementById('consultas').style.display = 'block';
+            
+            // Mostrar formulario o lista según corresponda
+            if (tipo === 'form') {
+                document.getElementById('consultationForm').style.display = 'block';
+                document.getElementById('consultationList').style.display = 'none';
+                populatePetOptions();
+            } else {
+                document.getElementById('consultationForm').style.display = 'none';
+                document.getElementById('consultationList').style.display = 'block';
+            }
+        }
+        window.mostrarConsultas = mostrarConsultas;
+        
+        // Agregar event listeners a los botones de consulta
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnNuevaConsulta = document.getElementById('btnNuevaConsulta');
+            const btnVerConsultas = document.getElementById('btnVerConsultas');
+            
+            if (btnNuevaConsulta) {
+                btnNuevaConsulta.addEventListener('click', function() {
+                    mostrarConsultas('form');
+                });
+            }
+            
+            if (btnVerConsultas) {
+                btnVerConsultas.addEventListener('click', function() {
+                    mostrarConsultas('list');
+                });
+            }
+        });
     })();
     </script>
 </body>

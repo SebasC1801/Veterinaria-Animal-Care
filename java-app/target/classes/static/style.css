@@ -1155,7 +1155,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    /* Elevar por encima del header y cualquier contenido */
+    z-index: 20000;
     animation: fadeIn 0.3s ease;
 }
 
