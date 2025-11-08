@@ -1,5 +1,5 @@
 server:
-  port: 8083
+  port: 8085
   servlet:
     context-path: /
 
@@ -15,26 +15,12 @@ spring:
     encoding: UTF-8
     mode: HTML
   
-  # H2 Database configuration (in-memory)
-  datasource:
-    url: jdbc:h2:mem:veterinarydb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
-  
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI:mongodb+srv://johnsbeltran9_db_user:aD1SY8lkiovIVkEj@cluster0.e06kh77.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority}}
+      auto-index-creation: true
+
 
 # Logging configuration
 logging:

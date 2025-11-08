@@ -33,7 +33,7 @@ La aplicación no se está ejecutando porque **Maven no está instalado** o no e
    - Navega a la carpeta del proyecto
    - Ejecuta: `cd java-app`
    - Ejecuta: `mvn spring-boot:run`
-   - La aplicación estará disponible en: **http://localhost:8083**
+   - La aplicación estará disponible en: **http://localhost:8085**
 
 ### Opción 2: Ejecutar JAR Compilado (Si existe)
 
@@ -44,7 +44,7 @@ Si ya tienes el JAR compilado en `java-app/target/veterinary-system-1.0.0.jar`:
    ```bash
    java -jar target\veterinary-system-1.0.0.jar
    ```
-3. La aplicación estará disponible en: **http://localhost:8083**
+3. La aplicación estará disponible en: **http://localhost:8085**
 
 ### Opción 3: Usar el Script de Verificación
 
@@ -83,11 +83,11 @@ Si Maven está instalado, verás la versión. Si no, verás un error.
 - **Causa:** Java no está instalado o no está en el PATH
 - **Solución:** Instala Java desde https://adoptium.net/
 
-### Error: "Puerto 8083 ya está en uso"
+### Error: "Puerto 8085 ya está en uso"
 - **Causa:** Otra aplicación está usando el puerto 8083
 - **Solución:** 
   - Cierra la otra aplicación
-  - O cambia el puerto en `java-app/src/main/resources/application.yml` (línea 2: `port: 8083`)
+  - O cambia el puerto en `java-app/src/main/resources/application.yml` (línea 2: `port: 8085`)
 
 ### Problemas con caracteres especiales en la ruta
 - **Causa:** La carpeta "Diseño" tiene una "ñ" que puede causar problemas
@@ -95,8 +95,8 @@ Si Maven está instalado, verás la versión. Si no, verás un error.
 
 ## 📝 Notas Importantes
 
-1. **Puerto de la aplicación:** La aplicación está configurada para ejecutarse en el puerto **8083** (no 8080)
-2. **URL de acceso:** Una vez ejecutada, accede a: **http://localhost:8083**
+1. **Puerto de la aplicación:** La aplicación está configurada para ejecutarse en el puerto **8085** (no 8080)
+2. **URL de acceso:** Una vez ejecutada, accede a: **http://localhost:8085**
 3. **Consola H2:** Si necesitas acceder a la base de datos H2: **http://localhost:8083/h2-console**
    - JDBC URL: `jdbc:h2:mem:veterinarydb`
    - Usuario: `sa`
@@ -108,7 +108,28 @@ Si Maven está instalado, verás la versión. Si no, verás un error.
 2. Abre una terminal en la carpeta `java-app`
 3. Ejecuta: `mvn spring-boot:run`
 4. Espera a que compile y se inicie
-5. Abre tu navegador en: **http://localhost:8083**
+5. Abre tu navegador en: **http://localhost:8085**
+
+## Configurar MongoDB vía variable de entorno
+
+Puedes definir la URI de MongoDB sin editar archivos usando variables de entorno (persisten sólo en el terminal actual):
+
+### Windows PowerShell
+
+```
+cd java-app
+$env:SPRING_DATA_MONGODB_URI="mongodb+srv://USUARIO:CONTRASENA@HOST/BD?retryWrites=true&w=majority"
+mvn -q spring-boot:run -DskipTests
+```
+
+También puedes usar `MONGODB_URI`:
+
+```
+$env:MONGODB_URI="mongodb+srv://USUARIO:CONTRASENA@HOST/BD?retryWrites=true&w=majority"
+mvn -q spring-boot:run -DskipTests
+```
+
+Si no defines variables, se usará la URI por defecto en `application.yml`.
 
 ## 💡 Alternativa: Usar IDE
 

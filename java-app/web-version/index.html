@@ -971,6 +971,30 @@ function hide(el){
         function getSession(){ return JSON.parse(localStorage.getItem(STORAGE_KEYS.SESS) || 'null'); }
         function clearSession(){ localStorage.removeItem(STORAGE_KEYS.SESS); }
 
+        // --- Permisos por rol (solo UI) ---
+        function normalizeRole(r){
+            const v = String(r || '').toLowerCase();
+            if(['user','usuario','role_user'].includes(v)) return 'user';
+            if(['veterinarian','vet','veterinario','role_veterinarian'].includes(v)) return 'veterinarian';
+            return v || 'user';
+        }
+        function getCurrentRole(){ const s = getSession(); return normalizeRole((s && s.role) ? s.role : 'user'); }
+        function applyRolePermissions(role){
+            role = normalizeRole(role);
+            // Ocultar nav "Registros" para usuarios
+            const registrosNav = document.querySelector('.nav a[href="#registros"]');
+            if(registrosNav){ registrosNav.style.display = (role === 'user') ? 'none' : ''; }
+            // Ocultar botones "Ver Registros" en Registro para usuarios
+            document.querySelectorAll('button[onclick="showSection(\'registros\')"]').forEach(btn => {
+                btn.style.display = (role === 'user') ? 'none' : '';
+            });
+            // Por consistencia, si ya estuviera visible la sección Registros siendo usuario, redirigimos
+            const activeReg = document.getElementById('registros');
+            if(role === 'user' && activeReg && activeReg.classList.contains('active')){
+                showSection('inicio');
+            }
+        }
+
         // --- Pets ---
         function savePets(list){ localStorage.setItem(STORAGE_KEYS.PETS, JSON.stringify(list)); }
         function getPets(){ return JSON.parse(localStorage.getItem(STORAGE_KEYS.PETS) || '[]'); }
@@ -991,6 +1015,12 @@ function hide(el){
 
         // --- Mostrar/ocultar secciones ---
         function showSection(id){
+            // Gating: usuarios no pueden acceder a "Registros"
+            const role = getCurrentRole();
+            if(id === 'registros' && role === 'user'){
+                showToast('No tienes permiso para ver registros de mascotas');
+                id = 'inicio';
+            }
             // if user not logged in and tries to access other than inicio/registro? handled elsewhere
             const sections = $all('main .section');
             sections.forEach(s=> s.classList.remove('active'));
@@ -1077,7 +1107,10 @@ function hide(el){
             show($('#mainHeader'));
             $('#userName').innerText = sess.name || sess.username;
             const roleMap = { veterinarian: 'Veterinario', user: 'Usuario' };
-            $('#userRole').innerText = roleMap[sess.role] ? roleMap[sess.role] : (sess.role || '').toUpperCase();
+            const normalized = getCurrentRole();
+            $('#userRole').innerText = roleMap[normalized] ? roleMap[normalized] : (sess.role || '').toUpperCase();
+            // Aplicar permisos UI según rol
+            applyRolePermissions(normalized);
             // Cargar datos desde API a cache y renderizar
             await loadPetsFromApiAndCache();
             await loadApptsFromApiAndCache();
@@ -1176,7 +1209,7 @@ function hide(el){
 
             // load session if exists
             const sess = getSession();
-            if(sess) onLogin();
+            if(sess) { applyRolePermissions(sess.role); onLogin(); }
         });
 
         async function savePetFromForm(){
@@ -1374,9 +1407,15 @@ function hide(el){
                 updateAppointmentStats();
                 return;
             }
+            const role = getCurrentRole();
             filtered.forEach(a=>{
                 const pet = pets.find(p=>p.id===a.petId) || {};
                 const tr = document.createElement('tr');
+                // Para usuarios: ocultar botón de editar; mantener Cancelar visible
+                const actionsHtml = (role === 'veterinarian')
+                    ? `<button class="btn" onclick="openEditAppointmentModal('${a.id}')"><i class="fas fa-edit"></i></button>
+                       <button class="btn btn-danger" onclick="openCancelAppointmentModal('${a.id}')"><i class="fas fa-ban"></i> Cancelar cita médica</button>`
+                    : `<button class="btn btn-danger" onclick="openCancelAppointmentModal('${a.id}')"><i class="fas fa-ban"></i> Cancelar cita médica</button>`;
                 tr.innerHTML = `
                     <td>${a.id}</td>
                     <td>${escapeHtml(pet.name || '—')}</td>
@@ -1387,10 +1426,7 @@ function hide(el){
                     <td>${a.reason || ''}</td>
                     <td><span class="priority-badge ${a.priority}">${getPriorityLabel(a.priority)}</span></td>
                     <td><span class="status-badge ${a.status}">${getStatusLabel(a.status)}</span></td>
-                    <td style="white-space:nowrap">
-                        <button class="btn" onclick="openEditAppointmentModal('${a.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger" onclick="openCancelAppointmentModal('${a.id}')"><i class="fas fa-ban"></i> Cancelar cita médica</button>
-                    </td>
+                    <td style="white-space:nowrap">${actionsHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1424,6 +1460,7 @@ function hide(el){
         }
 
         function openEditAppointmentModal(id){
+            if(getCurrentRole() === 'user'){ showToast('No tienes permiso para cambiar el estado de la cita'); return; }
             const appts = getAppts();
             const ap = appts.find(x=>x.id===id);
             if(!ap) { console.warn('Editar cita: ID no encontrado', id); return; }
@@ -1460,6 +1497,7 @@ function hide(el){
             modalEl.dataset.dirty = 'false';
         }
         function saveAppointmentEdit(){
+            if(getCurrentRole() === 'user'){ showToast('No tienes permiso para editar estados'); return; }
             const modalEl = document.getElementById('editAppointmentModal');
             const id = modalEl?.dataset.editing;
             if(!id) { console.warn('[Citas] Guardar edición sin id'); return; }
@@ -1478,6 +1516,7 @@ function hide(el){
         }
         // --- Cancelar cita médica (modal llamativo) ---
         function openCancelAppointmentModal(id){
+            if(getCurrentRole() === 'user'){ showToast('No tienes permiso para cancelar citas'); return; }
             const appts = getAppts();
             const ap = appts.find(a=>a.id===id);
             if(!ap){ console.warn('[Citas] Cancelar cita: id no encontrado', id); return; }
@@ -1538,7 +1577,7 @@ function hide(el){
                 showToast('Completa todos los campos obligatorios');
                 return;
             }
-            const payload = { petId, date, time, veterinarian, reason, priority, status:'pendiente' };
+            const payload = { petId, date, time, veterinarian, reason, priority, status:'scheduled' };
             try{
                 const created = await apiFetch('/appointments', { method:'POST', body: JSON.stringify(payload) });
                 const appts = getAppts(); appts.push(created); saveAppts(appts);

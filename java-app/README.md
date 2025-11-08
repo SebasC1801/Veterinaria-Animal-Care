@@ -94,7 +94,27 @@ O manualmente:
 mvn clean spring-boot:run -Dspring-boot.run.mainClass="com.veterinary.web.VeterinaryWebApp"
 ```
 
-La aplicación web estará disponible en: http://localhost:8080
+La aplicación web estará disponible en: http://localhost:8085
+
+### Configurar MongoDB por variable de entorno
+
+Puedes sobreescribir la URI de MongoDB sin editar `application.yml` usando una variable de entorno:
+
+- En Windows PowerShell (mismo terminal donde ejecutarás el backend):
+
+```
+$env:SPRING_DATA_MONGODB_URI="mongodb+srv://USUARIO:CONTRASENA@HOST/BD?retryWrites=true&w=majority"
+mvn -q spring-boot:run -DskipTests
+```
+
+- Alternativamente puedes usar `MONGODB_URI`:
+
+```
+$env:MONGODB_URI="mongodb+srv://USUARIO:CONTRASENA@HOST/BD?retryWrites=true&w=majority"
+mvn -q spring-boot:run -DskipTests
+```
+
+Si no defines variables, se usará la URI por defecto definida en `application.yml`.
 
 ## Notas sobre la Conversión
 
