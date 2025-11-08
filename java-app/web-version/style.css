@@ -1155,7 +1155,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 20000;
     animation: fadeIn 0.3s ease;
 }
 
@@ -1169,6 +1169,13 @@ body {
     overflow-y: auto;
     animation: slideIn 0.3s ease;
 }
+
+/* Modal de edición de mascota más amplio */
+#editPetModal .modal-content { max-width: 720px; }
+
+/* Asegurar que la tabla de Registros use todo el ancho del recuadro */
+#registros .table-container { width: 100%; }
+#registros .table { width: 100%; }
 
 .modal-header {
     padding: var(--spacing-6);
@@ -1676,6 +1683,9 @@ body {
     gap: 1rem;
     margin-bottom: 2rem;
 }
+
+/* Ocultar tarjetas de estadísticas de citas según solicitud */
+.appointment-stats { display: none !important; }
 
 .stat-card {
     background: white;

@@ -14,6 +14,17 @@ Este proyecto ha sido **completamente migrado y consolidado** para funcionar exc
 - [Contribuciones](#contribuciones)
 - [Licencia](#licencia)
 
+## 📖 Documentación Completa
+
+Para un **contexto completo y detallado** de la aplicación, incluyendo:
+- Arquitectura completa del sistema
+- Explicación detallada de cada patrón de diseño
+- Flujos de datos y casos de uso
+- Guía para desarrolladores
+- Estructura de datos y modelos
+
+**Consulta el archivo**: [`CONTEXTO_COMPLETO.md`](./CONTEXTO_COMPLETO.md)
+
 ## Patrones Implementados
 
 - **Singleton**: Sistema central de gestión de la veterinaria
