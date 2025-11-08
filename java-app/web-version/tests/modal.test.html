@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tests de Modales</title>
+  <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.20.0.css">
+  <style>
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35)}
+    .modal.open{display:flex}
+    .modal-content{background:#fff;padding:1rem;border-radius:8px}
+  </style>
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+
+  <div id="testModal" class="modal" style="display:none">
+    <div class="modal-content">
+      <button class="close-btn">Cerrar</button>
+      <p>Contenido</p>
+    </div>
+  </div>
+
+  <script src="../modal.js"></script>
+  <script src="https://code.jquery.com/qunit/qunit-2.20.0.js"></script>
+  <script>
+    QUnit.module('ModalController', function(){
+      QUnit.test('open() añade clase y muestra', function(assert){
+        const modal = document.getElementById('testModal');
+        const ctrl = new window.ModalController(modal, { backdropClickClose: true });
+        ctrl.open();
+        assert.ok(modal.classList.contains('open'), 'Tiene clase open');
+        assert.equal(getComputedStyle(modal).display, 'flex', 'Está visible');
+        ctrl.close();
+      });
+      QUnit.test('close() elimina clase y oculta', function(assert){
+        const modal = document.getElementById('testModal');
+        const ctrl = new window.ModalController(modal);
+        ctrl.open();
+        ctrl.close();
+        assert.notOk(modal.classList.contains('open'), 'No tiene clase open');
+        assert.equal(getComputedStyle(modal).display, 'none', 'Está oculto');
+      });
+      QUnit.test('Clic en backdrop cierra cuando está habilitado', function(assert){
+        const done = assert.async();
+        const modal = document.getElementById('testModal');
+        const ctrl = new window.ModalController(modal, { backdropClickClose: true });
+        ctrl.open();
+        setTimeout(()=>{
+          modal.dispatchEvent(new MouseEvent('click', { bubbles:true }));
+          setTimeout(()=>{
+            assert.equal(getComputedStyle(modal).display, 'none', 'Se cerró por backdrop');
+            done();
+          }, 10);
+        }, 10);
+      });
+    });
+  </script>
+</body>
+</html>

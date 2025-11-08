@@ -85,6 +85,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- Estilos completos de la aplicación -->
     <link rel="stylesheet" href="style.css">
+    <!-- Componente reutilizable de modales (IIFE)
+         Se carga antes de los scripts inline para exponer window.ModalController -->
+    <script src="modal.js"></script>
 </head>
 <body>
 
@@ -322,32 +325,7 @@
                 </div>
             </div>
 
-            <!-- Statistics Cards -->
-            <div class="stats-section">
-                <div class="card text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-paw text-3xl text-primary-color"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-amber-800" id="totalPets">0</h3>
-                    <p class="text-amber-700">Mascotas Registradas</p>
-                </div>
-
-                <div class="card text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-user-md text-3xl text-secondary-color"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-amber-800">3</h3>
-                    <p class="text-amber-700">Veterinarios</p>
-                </div>
-
-                <div class="card text-center">
-                    <div class="mb-4">
-                        <i class="fas fa-calendar-alt text-3xl text-accent-color"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-amber-800">12</h3>
-                    <p class="text-amber-700">Citas Programadas</p>
-                </div>
-            </div>
+            <!-- Statistics Cards removed per request -->
 
             <!-- Description Section -->
             <div class="description-section">
@@ -759,6 +737,31 @@
         </div>
     </div>
 
+
+    <!-- Modal: Cancelar Cita Médica (llamativo) -->
+    <div id="cancelAppointmentModal" class="modal" style="display:none">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;">
+                <h3><i class="fas fa-ban"></i> Cancelar Cita Médica</h3>
+                <button class="close-btn" onclick="closeCancelAppointmentModal()" style="color:#fff">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Confirmar cancelación de la cita seleccionada.</p>
+                <div class="pet-info">
+                    <p><strong>Mascota:</strong> <span id="cancelApptPetName">—</span></p>
+                    <p><strong>Dueño:</strong> <span id="cancelApptOwner">—</span></p>
+                    <p><strong>Fecha:</strong> <span id="cancelApptDate">—</span> <strong>Hora:</strong> <span id="cancelApptTime">—</span></p>
+                    <p><strong>Veterinario:</strong> <span id="cancelApptVet">—</span></p>
+                </div>
+                <p class="warning-text">Esta acción eliminará la cita.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCancelAppointmentModal()"><i class="fas fa-times"></i> Volver</button>
+                <button class="btn btn-danger" onclick="confirmCancelAppointment()"><i class="fas fa-ban"></i> Confirmar cancelación</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de edición de citas -->
     <div id="editAppointmentModal" class="modal" style="display:none">
         <div class="modal-content">
@@ -887,6 +890,36 @@
             CONSULTS: 'vet_consults_v1'
         };
 
+        // --- API Client (MongoDB backend) ---
+        const API_BASE = 'http://localhost:8085/api';
+        async function apiFetch(path, options = {}){
+            const resp = await fetch(API_BASE + path, {
+                headers: { 'Content-Type': 'application/json' },
+                ...options
+            });
+            const isJson = (resp.headers.get('content-type') || '').includes('application/json');
+            const data = isJson ? await resp.json() : await resp.text();
+            if(!resp.ok){ throw new Error(typeof data === 'string' ? data : (data.error || 'Error de API')); }
+            return data;
+        }
+        async function loadPetsFromApiAndCache(){
+            try{
+                const pets = await apiFetch('/pets');
+                savePets(Array.isArray(pets) ? pets : []);
+            }catch(e){
+                console.warn('No se pudieron cargar mascotas desde API. Operación requiere MongoDB activo.', e.message);
+                showToast('Backend no disponible. Activa MongoDB y el servidor');
+                // Modo solo-Mongo: no usamos datos de localStorage como fuente
+                savePets([]);
+            }
+        }
+        async function loadApptsFromApiAndCache(){
+            try{
+                const appts = await apiFetch('/appointments');
+                saveAppts(Array.isArray(appts) ? appts : []);
+            }catch(e){ console.warn('No se pudieron cargar citas desde API, usando cache/localStorage', e.message); }
+        }
+
         // --- Datos por defecto (si no existen) ---
         function ensureDefaults(){
             if(!localStorage.getItem(STORAGE_KEYS.USERS)){
@@ -906,8 +939,24 @@
         // --- Utilidades DOM ---
         function $(sel){ return document.querySelector(sel); }
         function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
-function show(el){ if(!el) return; el.style.display = 'block'; }
-function hide(el){ if(!el) return; el.style.display = 'none'; }
+function show(el){
+    if(!el) return;
+    const isModal = el.classList && el.classList.contains('modal');
+    if (isModal){
+        el.style.display = 'flex';
+        el.classList.add('open');
+    } else {
+        el.style.display = 'block';
+    }
+}
+function hide(el){
+    if(!el) return;
+    const isModal = el.classList && el.classList.contains('modal');
+    if (isModal){
+        el.classList.remove('open');
+    }
+    el.style.display = 'none';
+}
         function showToast(msg, timeout=3000){ 
             const t = document.createElement('div'); t.className='toast'; t.innerText = msg;
             document.body.appendChild(t);
@@ -933,6 +982,12 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         // --- Consultations ---
         function saveConsults(list){ localStorage.setItem(STORAGE_KEYS.CONSULTS, JSON.stringify(list)); }
         function getConsults(){ return JSON.parse(localStorage.getItem(STORAGE_KEYS.CONSULTS) || '[]'); }
+
+        // --- Controladores de modales reutilizables ---
+        const modalDeleteCtrl = new window.ModalController('#deleteModal', { backdropClickClose: true });
+        const editAppointmentCtrl = new window.ModalController('#editAppointmentModal', { backdropClickClose: true });
+        const newAppointmentCtrl = new window.ModalController('#newAppointmentModal', { backdropClickClose: true });
+        const cancelApptCtrl = new window.ModalController('#cancelAppointmentModal', { backdropClickClose: true });
 
         // --- Mostrar/ocultar secciones ---
         function showSection(id){
@@ -961,23 +1016,34 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         }
 
         // --- Login / Register handlers ---
-        window.handleLogin = function handleLogin(e){
+        window.handleLogin = async function handleLogin(e){
             e.preventDefault();
             const email = $('#loginEmail').value.trim();
             const pass = $('#loginPassword').value;
             const role = $('#loginRole').value;
+            // Intentar login contra API
+            try{
+                const user = await apiFetch('/auth/login', { method:'POST', body: JSON.stringify({ email, password: pass }) });
+                saveSession({ username:user.email, name:user.name, role:user.role });
+                await onLogin();
+                showToast('Inicio de sesión correcto');
+                return;
+            }catch(err){
+                console.warn('Fallo login API, se intenta localStorage:', err.message);
+            }
+            // Fallback local
             const users = getUsers();
             const user = users.find(u => u.username.toLowerCase() === email.toLowerCase() && u.password === pass && u.role === role);
             if(user){
                 saveSession({username:user.username, name:user.name, role:user.role});
-                onLogin();
+                await onLogin();
                 showToast('Inicio de sesión correcto');
             } else {
                 showToast('Credenciales incorrectas');
             }
         };
 
-        window.handleRegister = function handleRegister(e){
+        window.handleRegister = async function handleRegister(e){
             e.preventDefault();
             const name = $('#registerName').value.trim();
             const email = $('#registerEmail').value.trim();
@@ -986,6 +1052,14 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             const role = $('#registerRole').value;
             const phone = $('#registerPhone').value.trim();
             if(password !== confirm){ showToast('Las contraseñas no coinciden'); return; }
+            // Intentar registro en API
+            try{
+                await apiFetch('/auth/register', { method:'POST', body: JSON.stringify({ name, email, password, role, phone }) });
+                showToast('Cuenta creada correctamente. Inicia sesión');
+                showLoginForm();
+                return;
+            }catch(err){ console.warn('Registro API falló, se usa localStorage:', err.message); }
+            // Fallback local
             const users = getUsers();
             if(users.find(u => u.username.toLowerCase() === email.toLowerCase())){ showToast('Usuario ya registrado'); return; }
             users.push({ username: email, name, password, role, phone });
@@ -994,7 +1068,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             showLoginForm();
         };
 
-        function onLogin(){
+        async function onLogin(){
             const sess = getSession();
             if(!sess) return;
             // hide auth container and show main
@@ -1004,6 +1078,9 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             $('#userName').innerText = sess.name || sess.username;
             const roleMap = { veterinarian: 'Veterinario', user: 'Usuario' };
             $('#userRole').innerText = roleMap[sess.role] ? roleMap[sess.role] : (sess.role || '').toUpperCase();
+            // Cargar datos desde API a cache y renderizar
+            await loadPetsFromApiAndCache();
+            await loadApptsFromApiAndCache();
             // load pets into selects and table
             renderPetsTable();
             populatePetOptions();
@@ -1043,7 +1120,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             const list = filter ? pets.filter(p => p.name.toLowerCase().includes(filter.toLowerCase())) : pets;
             if(list.length === 0){
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay mascotas registradas</td></tr>';
-                $('#totalPets').innerText = 0;
+                const totalPetsEl0 = $('#totalPets'); if(totalPetsEl0) totalPetsEl0.innerText = 0;
                 return;
             }
             list.forEach(p=>{
@@ -1064,7 +1141,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
                 `;
                 tbody.appendChild(tr);
             });
-            $('#totalPets').innerText = pets.length;
+            const totalPetsEl = $('#totalPets'); if(totalPetsEl) totalPetsEl.innerText = pets.length;
         }
 
         function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"]/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]); }
@@ -1102,7 +1179,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             if(sess) onLogin();
         });
 
-        function savePetFromForm(){
+        async function savePetFromForm(){
             try{
                 const name = $('#name').value.trim();
                 const familyType = $('#family_type').value;
@@ -1114,15 +1191,29 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
                 const ownerEmail = $('#owner_email').value.trim();
 
                 if(!name || !familyType || !animalType || !ownerName) { showToast('Completa los campos obligatorios'); return; }
-
-                const pets = getPets();
-                const id = nextId('pet');
-                const pet = { id, name, familyType, type:animalType, breed, age, ownerName, ownerPhone, ownerEmail, createdAt: new Date().toISOString() };
-                pets.push(pet);
-                savePets(pets);
+                const payload = { name, familyType, type:animalType, breed, age: parseInt(age||'0',10), ownerName, ownerPhone, ownerEmail };
+                // Actualización optimista inmediata (solo UI, revertible)
+                const tempId = nextId('pet');
+                const optimisticPet = { id: tempId, ...payload, createdAt: new Date().toISOString() };
+                const petsNow = getPets(); petsNow.push(optimisticPet); savePets(petsNow);
                 showToast('Mascota registrada');
                 renderPetsTable();
                 populatePetOptions();
+                // Sincronizar con API; si falla, revertimos el estado local
+                apiFetch('/pets', { method:'POST', body: JSON.stringify(payload) })
+                    .then(created => {
+                        const pets = getPets();
+                        const idx = pets.findIndex(p => p.id === tempId);
+                        if(idx !== -1){ pets[idx] = created; savePets(pets); renderPetsTable(); populatePetOptions(); }
+                    })
+                    .catch(err => {
+                        console.warn('Fallo al guardar en API, revertimos creación local:', err.message);
+                        const pets = getPets().filter(p => p.id !== tempId);
+                        savePets(pets);
+                        renderPetsTable();
+                        populatePetOptions();
+                        showToast('Error al guardar en backend. No se creó la mascota');
+                    });
                 // reset form (keep to minimal)
                 $('#registroForm').reset?.();
             }catch(err){
@@ -1198,15 +1289,14 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             modal.style.display = 'none';
             delete modal.dataset.editing;
         }
-        function saveEditPet(){
+        async function saveEditPet(){
             const modal = document.getElementById('editPetModal');
             const id = modal.dataset.editing;
             if(!id) { closeEditPetModal(); return; }
             const pets = getPets();
             const idx = pets.findIndex(p=>p.id===id);
             if(idx === -1){ closeEditPetModal(); return; }
-            const updated = {
-                ...pets[idx],
+            const payload = {
                 name: document.getElementById('editPetName').value.trim(),
                 age: parseInt(document.getElementById('editPetAge').value || '0', 10),
                 breed: document.getElementById('editPetBreed').value.trim(),
@@ -1216,27 +1306,47 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
                 ownerPhone: document.getElementById('editOwnerPhone').value.trim(),
                 ownerEmail: document.getElementById('editOwnerEmail').value.trim()
             };
-            pets[idx] = updated;
-            savePets(pets);
-            renderPetsTable();
-            populatePetOptions();
-            showToast('Mascota actualizada');
-            closeEditPetModal();
+            // Actualización optimista inmediata con rollback si falla
+            const before = { ...pets[idx] };
+            const updatedLocal = { ...pets[idx], ...payload, updatedAt: new Date().toISOString() };
+            pets[idx] = updatedLocal; savePets(pets);
+            renderPetsTable(); populatePetOptions(); showToast('Mascota actualizada'); closeEditPetModal();
+            // Sincronizar con API
+            apiFetch('/pets/'+id, { method:'PUT', body: JSON.stringify(payload) })
+                .then(updatedFromApi => {
+                    const currentPets = getPets();
+                    const i = currentPets.findIndex(p=>p.id===id);
+                    if(i !== -1){ currentPets[i] = { ...currentPets[i], ...updatedFromApi }; savePets(currentPets); renderPetsTable(); populatePetOptions(); }
+                })
+                .catch(err => {
+                    console.warn('No se pudo actualizar en API, se revierte edición local:', err.message);
+                    const currentPets = getPets();
+                    const i = currentPets.findIndex(p=>p.id===id);
+                    if(i !== -1){ currentPets[i] = before; savePets(currentPets); renderPetsTable(); populatePetOptions(); showToast('Error al actualizar en backend. Se deshicieron los cambios'); }
+                });
         }
         function askDeletePet(id){
             const pets = getPets(); const pet = pets.find(p=>p.id===id); if(!pet) return;
             petToDeleteId = id;
             $('#deletePetName').innerText = pet.name;
             $('#deletePetOwner').innerText = pet.ownerName;
-            show($('#deleteModal'));
+            modalDeleteCtrl.open();
         }
-        function closeDeleteModal(){ hide($('#deleteModal')); petToDeleteId = null; }
-        function confirmDelete(){
+        function closeDeleteModal(){ modalDeleteCtrl.close(); petToDeleteId = null; }
+        async function confirmDelete(){
             if(!petToDeleteId){ closeDeleteModal(); return; }
-            const pets = getPets().filter(p=>p.id !== petToDeleteId);
-            savePets(pets); renderPetsTable(); populatePetOptions();
-            closeDeleteModal();
-            showToast('Mascota eliminada');
+            // Eliminación optimista con rollback si falla
+            const prevPets = getPets();
+            const removed = prevPets.find(p=>p.id===petToDeleteId);
+            const afterDelete = prevPets.filter(p=>p.id !== petToDeleteId);
+            savePets(afterDelete); renderPetsTable(); populatePetOptions();
+            closeDeleteModal(); showToast('Mascota eliminada');
+            // Sincronizar con API
+            apiFetch('/pets/'+petToDeleteId, { method:'DELETE' })
+                .catch(err => {
+                    console.warn('No se pudo eliminar en API, se revierte borrado local:', err.message);
+                    const restored = getPets(); restored.push(removed); savePets(restored); renderPetsTable(); populatePetOptions(); showToast('Error al eliminar en backend. Se restauró la mascota');
+                });
         }
 
         // --- Appointments (citas) ---
@@ -1246,7 +1356,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         
         /* getAppts/saveAppts ya definidos con STORAGE_KEYS.APPTS arriba */
 
-        function renderAppointments(){
+        async function renderAppointments(){
             const tbody = $('#appointmentsTableBody');
             const appts = getAppts();
             tbody.innerHTML = '';
@@ -1279,7 +1389,7 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
                     <td><span class="status-badge ${a.status}">${getStatusLabel(a.status)}</span></td>
                     <td style="white-space:nowrap">
                         <button class="btn" onclick="openEditAppointmentModal('${a.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-danger" onclick="deleteAppointment('${a.id}')"><i class="fas fa-trash"></i></button>
+                        <button class="btn btn-danger" onclick="openCancelAppointmentModal('${a.id}')"><i class="fas fa-ban"></i> Cancelar cita médica</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1314,28 +1424,87 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         }
 
         function openEditAppointmentModal(id){
-            const appts = getAppts(); const ap = appts.find(x=>x.id===id); if(!ap) return;
+            const appts = getAppts();
+            const ap = appts.find(x=>x.id===id);
+            if(!ap) { console.warn('Editar cita: ID no encontrado', id); return; }
+            // Logging de estado actual
+            console.log('[Citas] Abrir modal edición → id:', id, 'estado actual:', ap.status);
             // Mostrar el estado en español usando el mapeo
-            $('#currentAppointmentStatus').innerText = getStatusLabel(ap.status);
+            const currentLabel = getStatusLabel(ap.status);
+            $('#currentAppointmentStatus').innerText = currentLabel;
             $('#newAppointmentStatus').value = ap.status;
-            $('#editAppointmentModal').dataset.editing = id;
-            // Centrar el modal en pantalla usando display:flex
-            document.getElementById('editAppointmentModal').style.display = 'flex';
+            const modalEl = document.getElementById('editAppointmentModal');
+            modalEl.dataset.editing = id;
+            modalEl.dataset.dirty = 'false';
+            // Listener de cambio para reflejar inmediatamente y loguear
+            const sel = document.getElementById('newAppointmentStatus');
+            if (sel) {
+                sel.onchange = function(){
+                    const oldStatus = ap.status;
+                    const newStatus = sel.value;
+                    $('#currentAppointmentStatus').innerText = getStatusLabel(newStatus);
+                    // marcar como dirty y loguear
+                    modalEl.dataset.dirty = 'true';
+                    console.log('[Citas] Cambio de estado en modal → id:', id, 'de:', oldStatus, 'a:', newStatus);
+                };
+            }
+            // Abrir con controlador reutilizable
+            editAppointmentCtrl.open();
         }
-        function closeEditAppointmentModal(){ hide($('#editAppointmentModal')); delete $('#editAppointmentModal').dataset.editing; }
+        function closeEditAppointmentModal(){
+            const modalEl = document.getElementById('editAppointmentModal');
+            if (!modalEl) return;
+            // Cerrar siempre sin mostrar mensaje
+            hide(modalEl);
+            delete modalEl.dataset.editing;
+            modalEl.dataset.dirty = 'false';
+        }
         function saveAppointmentEdit(){
-            const id = $('#editAppointmentModal').dataset.editing;
-            if(!id) return;
-            const newStatus = $('#newAppointmentStatus').value;
+            const modalEl = document.getElementById('editAppointmentModal');
+            const id = modalEl?.dataset.editing;
+            if(!id) { console.warn('[Citas] Guardar edición sin id'); return; }
+            const newStatus = document.getElementById('newAppointmentStatus').value;
             const appts = getAppts();
             const ap = appts.find(a=>a.id===id);
-            if(ap){ ap.status = newStatus; saveAppts(appts); renderAppointments(); showToast('Cita actualizada'); }
+            if(ap){
+                const before = ap.status;
+                ap.status = newStatus;
+                saveAppts(appts);
+                renderAppointments();
+                console.log('[Citas] Guardado edición → id:', id, 'de:', before, 'a:', newStatus);
+                showToast('Cita actualizada');
+            }
             closeEditAppointmentModal();
         }
-        function deleteAppointment(id){
-            if(!confirm('Eliminar cita?')) return;
-            const appts = getAppts().filter(a=>a.id!==id);
-            saveAppts(appts); renderAppointments(); showToast('Cita eliminada');
+        // --- Cancelar cita médica (modal llamativo) ---
+        function openCancelAppointmentModal(id){
+            const appts = getAppts();
+            const ap = appts.find(a=>a.id===id);
+            if(!ap){ console.warn('[Citas] Cancelar cita: id no encontrado', id); return; }
+            const pet = (getPets().find(p=>p.id===ap.petId)) || {};
+            document.getElementById('cancelApptPetName').innerText = pet.name || '—';
+            document.getElementById('cancelApptOwner').innerText = pet.ownerName || '—';
+            document.getElementById('cancelApptDate').innerText = ap.date || '—';
+            document.getElementById('cancelApptTime').innerText = ap.time || '—';
+            document.getElementById('cancelApptVet').innerText = ap.veterinarian || '—';
+            const modal = document.getElementById('cancelAppointmentModal');
+            modal.dataset.apptId = id;
+            cancelApptCtrl.open();
+        }
+        function closeCancelAppointmentModal(){ cancelApptCtrl.close(); delete document.getElementById('cancelAppointmentModal').dataset.apptId; }
+        function confirmCancelAppointment(){
+            const id = document.getElementById('cancelAppointmentModal').dataset.apptId;
+            if(!id) return;
+            const appts = getAppts();
+            const idx = appts.findIndex(a=>a.id===id);
+            if(idx === -1) return;
+            // Eliminar la cita para que desaparezca
+            appts.splice(idx, 1);
+            saveAppts(appts);
+            renderAppointments();
+            cancelApptCtrl.close();
+            console.log('[Citas] Cita eliminada → id:', id);
+            showToast('Cita eliminada');
         }
 
         // --- Nueva Cita Médica ---
@@ -1353,11 +1522,12 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
             document.getElementById('newApptVet').value = '';
             document.getElementById('newApptReason').value = '';
             document.getElementById('newApptPriority').value = 'normal';
-            const modalEl = document.getElementById('newAppointmentModal');
-            modalEl.style.display = 'flex';
+            newAppointmentCtrl.open();
         }
-        function closeNewAppointmentModal(){ hide(document.getElementById('newAppointmentModal')); }
-        function saveNewAppointment(){
+        function closeNewAppointmentModal(){ newAppointmentCtrl.close(); }
+
+        // Flujo de cambios sin guardar eliminado: cierre directo en closeEditAppointmentModal
+        async function saveNewAppointment(){
             const petId = document.getElementById('newApptPet').value;
             const date = document.getElementById('newApptDate').value;
             const time = document.getElementById('newApptTime').value;
@@ -1368,11 +1538,18 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
                 showToast('Completa todos los campos obligatorios');
                 return;
             }
-            const appts = getAppts();
-            const id = nextId('appt');
-            const appt = { id, petId, date, time, veterinarian, reason, priority, status:'scheduled', createdAt:new Date().toISOString() };
-            appts.push(appt);
-            saveAppts(appts);
+            const payload = { petId, date, time, veterinarian, reason, priority, status:'pendiente' };
+            try{
+                const created = await apiFetch('/appointments', { method:'POST', body: JSON.stringify(payload) });
+                const appts = getAppts(); appts.push(created); saveAppts(appts);
+            }catch(err){
+                console.warn('Fallo al crear cita en API, se usa localStorage:', err.message);
+                const appts = getAppts();
+                const id = nextId('appt');
+                const appt = { id, ...payload, createdAt:new Date().toISOString() };
+                appts.push(appt);
+                saveAppts(appts);
+            }
             renderAppointments();
             updateAppointmentStats();
             closeNewAppointmentModal();
@@ -1428,7 +1605,9 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         window.openEditAppointmentModal = openEditAppointmentModal;
         window.closeEditAppointmentModal = closeEditAppointmentModal;
         window.saveAppointmentEdit = saveAppointmentEdit;
-        window.deleteAppointment = deleteAppointment;
+        window.openCancelAppointmentModal = openCancelAppointmentModal;
+        window.closeCancelAppointmentModal = closeCancelAppointmentModal;
+        window.confirmCancelAppointment = confirmCancelAppointment;
         // Exponer funciones del modal de Nueva Cita para que los botones inline funcionen
         window.openNewAppointmentModal = openNewAppointmentModal;
         window.closeNewAppointmentModal = closeNewAppointmentModal;
@@ -1447,7 +1626,8 @@ function hide(el){ if(!el) return; el.style.display = 'none'; }
         // update basic stats
         function updateStats(){
             const pets = getPets();
-            $('#totalPets').innerText = pets.length;
+            const totalPetsEl = $('#totalPets');
+            if(totalPetsEl) totalPetsEl.innerText = pets.length;
         }
 
         // expose on window for convenience
