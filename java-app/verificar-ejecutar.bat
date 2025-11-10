@@ -58,7 +58,7 @@ if exist "target\veterinary-system-1.0.0.jar" (
     if /i "%ejecutarJar%"=="S" (
         echo.
         echo Ejecutando aplicación desde JAR...
-        echo La aplicación estará disponible en: http://localhost:8083
+        echo La aplicación estará disponible en: http://localhost:8085
         echo Presione Ctrl+C para detener el servidor
         echo.
         java -jar target\veterinary-system-1.0.0.jar
@@ -72,7 +72,7 @@ if exist "target\veterinary-system-1.0.0.jar" (
 REM Compilar y ejecutar con Maven
 echo.
 echo Compilando y ejecutando la aplicación con Maven...
-echo La aplicación estará disponible en: http://localhost:8083
+echo La aplicación estará disponible en: http://localhost:8085
 echo Presione Ctrl+C para detener el servidor
 echo.
 mvn spring-boot:run

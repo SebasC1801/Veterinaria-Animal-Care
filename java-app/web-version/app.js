@@ -1,4 +1,4 @@
-// Sistema Veterinario - Implementación de Patrones de Diseño
+// Veterinaria Animal Care - Aplicación Web
 // JavaScript para la aplicación web
 
 // ===== GLOBAL VARIABLES =====

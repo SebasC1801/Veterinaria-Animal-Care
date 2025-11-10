@@ -1,5 +1,5 @@
 /**
- * JavaScript principal para la aplicación Veterinaria Patrones
+ * JavaScript principal para la aplicación Veterinaria Animal Care
  * Funciones comunes y utilidades
  */
 

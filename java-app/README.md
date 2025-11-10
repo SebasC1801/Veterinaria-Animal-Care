@@ -1,14 +1,11 @@
 # Sistema de Gestión Veterinaria - Java
 
-Este proyecto es una conversión a Java del sistema de gestión veterinaria originalmente desarrollado en Python. Implementa varios patrones de diseño para demostrar su aplicación práctica en un sistema real.
+Este proyecto es una conversión a Java del sistema de gestión veterinaria originalmente desarrollado en Python. Está enfocado en funcionalidades reales de gestión de mascotas, citas y soporte web con Spring Boot.
 
-## Patrones de Diseño Implementados
+## Arquitectura del Dominio
 
-1. **Singleton**: Implementado en `VeterinarySystem.java` para garantizar una única instancia del sistema.
-2. **Factory Method**: Implementado en `AnimalFactory.java` para crear diferentes tipos de animales.
-3. **Abstract Factory**: Implementado en `PetFamily.java`, `DomesticPetFamily.java` y `ExoticPetFamily.java` para crear familias de mascotas relacionadas.
-4. **Builder**: Implementado en `PetRecordBuilder.java` para construir registros de mascotas complejos paso a paso.
-5. **Prototype**: Implementado en `Prototype.java`, `MedicalRecord.java` y `PrototypeManager.java` para clonar objetos existentes.
+- Modelos y servicios orientados a la gestión veterinaria: creación de animales, registros de mascotas y controles médicos.
+- Organización por paquetes: `models`, `services` y `web` para mantener separación de responsabilidades.
 
 ## Estructura del Proyecto
 
@@ -41,7 +38,7 @@ java-app/
 │       │           ├── services/
 │       │           │   └── clinic/        # Singleton pattern
 │       │           │       └── VeterinarySystem.java
-│       │           ├── ui/                # Aplicación de escritorio
+│       │           ├── ui/                # (legacy opcional)
 │       │           │   └── VeterinaryApp.java
 │       │           ├── web/               # Aplicación web Spring Boot
 │       │           │   ├── VeterinaryWebApp.java
@@ -55,7 +52,7 @@ java-app/
 │           │   └── js/
 │           └── templates/
 ├── pom.xml
-├── run.bat                # Script para ejecutar la aplicación de escritorio
+├── run.bat                # Script para ejecutar la aplicación de escritorio (opcional)
 └── run-web.bat            # Script para ejecutar la aplicación web
 ```
 
@@ -66,7 +63,7 @@ java-app/
 
 ## Cómo Ejecutar
 
-### Aplicación de Escritorio
+### Aplicación de Escritorio (opcional)
 
 Para ejecutar la aplicación de escritorio con interfaz gráfica Swing:
 
@@ -118,19 +115,13 @@ Si no defines variables, se usará la URI por defecto definida en `application.y
 
 ## Notas sobre la Conversión
 
-Este proyecto es una conversión de Python a Java, manteniendo la misma estructura y patrones de diseño. La versión Java incluye:
-
-1. Implementación completa de los modelos y servicios
-2. Interfaz gráfica de usuario con Swing
-3. Aplicación web con Spring Boot
-4. Demostración interactiva de los patrones de diseño
+Este proyecto es una conversión de Python a Java, manteniendo la estructura funcional y enfocando el sistema en flujos reales de Animal Care. Se retiraron materiales y rutas de demostración de “patrones”.
 
 ## Funcionalidades
 
 - Registro y gestión de mascotas
 - Programación de citas veterinarias
-- Demostración interactiva de patrones de diseño
-- Interfaz web y de escritorio
+- Interfaz web y de escritorio (opcional)
 
 ## Integración de Citas Médicas (Consultas unificadas)
 

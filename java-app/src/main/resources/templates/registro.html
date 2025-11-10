@@ -103,80 +103,7 @@
                         </div>
                     </div>
 
-                    <!-- Información Médica -->
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <i class="fas fa-stethoscope"></i>
-                            Información Médica
-                        </h2>
-                        
-                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
-                            <div class="form-group">
-                                <label class="form-label" for="weight">Peso (kg) *</label>
-                                <input type="number" class="form-control" id="weight" name="weight" step="0.1" min="0" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="vaccination_status">Estado de Vacunación *</label>
-                                <select class="form-control form-select" id="vaccination_status" name="vaccinationStatus" required>
-                                    <option value="">Seleccione estado</option>
-                                    <option th:each="status : ${options.vaccinationStatuses}" 
-                                            th:value="${status}" 
-                                            th:text="${status}">
-                                        Al día
-                                    </option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="spayed_neutered" name="spayedNeutered">
-                                    <label class="form-check-label" for="spayed_neutered">Esterilizado/Castrado</label>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="allergies">Alergias</label>
-                                <input type="text" class="form-control" id="allergies" name="allergies" placeholder="Separadas por comas">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="chronic_conditions">Condiciones Crónicas</label>
-                                <input type="text" class="form-control" id="chronic_conditions" name="chronicConditions" placeholder="Separadas por comas">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Información Administrativa -->
-                    <div class="form-section">
-                        <h2 class="section-title">
-                            <i class="fas fa-clipboard-list"></i>
-                            Información Administrativa
-                        </h2>
-                        
-                        <div class="grid grid-cols-1 grid-cols-2 gap-6">
-                            <div class="form-group">
-                                <label class="form-label" for="veterinarian_id">ID Veterinario</label>
-                                <input type="number" class="form-control" id="veterinarian_id" name="veterinarianId">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="payment_method">Método de Pago</label>
-                                <select class="form-control form-select" id="payment_method" name="paymentMethod">
-                                    <option th:each="method : ${options.paymentMethods}" 
-                                            th:value="${method}" 
-                                            th:text="${method}">
-                                        Efectivo
-                                    </option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="insurance_info">Información de Seguro</label>
-                                <input type="text" class="form-control" id="insurance_info" name="insuranceInfo">
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     <!-- Botones de Acción -->
                     <div class="form-actions">
@@ -381,16 +308,7 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
                 
-                // Convertir checkbox a boolean
-                data.spayedNeutered = document.getElementById('spayed_neutered').checked;
-                
-                // Convertir alergias y condiciones crónicas a arrays
-                if (data.allergies) {
-                    data.allergies = data.allergies.split(',').map(a => a.trim()).filter(a => a);
-                }
-                if (data.chronicConditions) {
-                    data.chronicConditions = data.chronicConditions.split(',').map(c => c.trim()).filter(c => c);
-                }
+                // Campos médicos/administrativos removidos; se envían solo los presentes
                 
                 const submitBtn = form.querySelector('button[type="submit"]');
                 submitBtn.classList.add('loading');
