@@ -2,9 +2,9 @@
 
 Una aplicación completa desarrollada en **Java** que implementa los patrones de diseño de software para la gestión de mascotas en una veterinaria.
 
-## ✅ PROYECTO CONVERTIDO COMPLETAMENTE A JAVA
+## ✅ Proyecto consolidado en Java + Frontend estático
 
-Este proyecto ha sido **completamente migrado y consolidado** para funcionar exclusivamente en Java, eliminando dependencias anteriores y proporcionando una solución unificada y robusta.
+El proyecto funciona principalmente como aplicación Java (con Spring Boot) y un frontend estático en `java-app/web-version`. Se han removido artefactos no utilizados para mantener una base limpia y coherente.
 
 ## 📚 Contenido
 - [Estructura del Proyecto](#estructura-del-proyecto)
@@ -14,16 +14,9 @@ Este proyecto ha sido **completamente migrado y consolidado** para funcionar exc
 - [Contribuciones](#contribuciones)
 - [Licencia](#licencia)
 
-## 📖 Documentación Completa
+## 📖 Documentación
 
-Para un **contexto completo y detallado** de la aplicación, incluyendo:
-- Arquitectura completa del sistema
-- Explicación detallada de cada patrón de diseño
-- Flujos de datos y casos de uso
-- Guía para desarrolladores
-- Estructura de datos y modelos
-
-**Consulta el archivo**: [`CONTEXTO_COMPLETO.md`](./CONTEXTO_COMPLETO.md)
+Para un contexto detallado de la aplicación (arquitectura, patrones y flujos), consulta: [`CONTEXTO_COMPLETO.md`](./CONTEXTO_COMPLETO.md).
 
 ## Patrones Implementados
 
@@ -33,25 +26,22 @@ Para un **contexto completo y detallado** de la aplicación, incluyendo:
 - **Builder**: Construcción paso a paso de fichas de mascotas
 - **Prototype**: Clonación de fichas para registrar descendencia
 
-Cada patrón se implementa con un ejemplo funcional dentro del sistema y puede visualizarse al ejecutar el script `run-demo.bat`.
+Cada patrón se implementa con un ejemplo funcional dentro del sistema. Los scripts de demostración legacy se han retirado durante la limpieza.
 
 ## Estructura del Proyecto
 
 ```
-📁 Gestión de citas veterinarias/
+📁 Veterinaria_Animal_Care/
 ├── 📁 java-app/
 │   ├── 📄 pom.xml
-│   ├── 📄 run-demo.bat
-│   ├── 📄 run-interactive.bat
-│   └── 📁 src/main/java/com/veterinary/
-│       ├── 📄 VeterinaryManagementSystem.java
-│       ├── 📁 patterns/
-│       │   ├── 📄 VeterinaryPatternsApplication.java
-│       │   ├── 📁 controller/
-│       │   ├── 📁 service/
-│       │   └── 📁 model/
-├── 📁 data/
-└── 📄 README.md
+│   ├── 📄 run-web.bat
+│   ├── 📄 run-direct.bat
+│   ├── 📄 verificar-ejecutar.bat
+│   ├── 📁 src/main/java/com/veterinary/
+│   ├── 📁 src/main/resources/
+│   └── 📁 web-version/
+├── 📄 README.md
+└── 📄 CONTEXTO_COMPLETO.md
 ```
 
 ## Instalación y Ejecución
@@ -62,18 +52,6 @@ Cada patrón se implementa con un ejemplo funcional dentro del sistema y puede v
 
 ### 🚀 Ejecución Rápida
 
-- **Demostración Automática de Patrones**
-```bash
-cd java-app
-run-demo.bat
-```
-
-- **Aplicación Interactiva (Consola)**
-```bash
-cd java-app
-run-interactive.bat
-```
-
 - **Aplicación Web Spring Boot**
 ```bash
 cd java-app
@@ -81,13 +59,18 @@ mvn spring-boot:run
 ```
 Accede a: `http://localhost:8080`
 
-### 📋 Ejecución Manual
-
-- **Aplicación Standalone (Consola)**
+También puedes usar el script:
 ```bash
 cd java-app
-mvn clean compile
-java -cp "target/classes;target/dependency/*" com.veterinary.VeterinaryManagementSystem
+run-web.bat
+```
+
+### 🔧 Frontend estático
+Para levantar el frontend sin backend:
+```bash
+cd java-app
+python -m http.server 8001
+# Navega a: http://localhost:8001/web-version/index.html
 ```
 
 ## Funcionalidades

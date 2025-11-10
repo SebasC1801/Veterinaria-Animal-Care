@@ -1,0 +1,16 @@
+# Build artifacts
+java-app/target/
+
+# Local backups
+backup-*.zip
+
+# IDE/editor junk
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
