@@ -16,10 +16,13 @@ spring:
     mode: HTML
   
 
+
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI:mongodb+srv://johnsbeltran9_db_user:aD1SY8lkiovIVkEj@cluster0.e06kh77.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority}}
+      uri: mongodb+srv://johnceballosbel_db_user:fVviIns3WzS4EUY4@cluster.gbrxtsz.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority&appName=Cluster
+
       auto-index-creation: true
+
 
 
 # Logging configuration
