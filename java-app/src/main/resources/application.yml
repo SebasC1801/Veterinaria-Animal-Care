@@ -1,5 +1,5 @@
 server:
-  port: 8085
+  port: 8086
   servlet:
     context-path: /
 
@@ -19,7 +19,7 @@ spring:
 
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI:mongodb://localhost:27017/VeterinariaAnimalCare}}
+      uri: mongodb+srv://johnceballosbel_db_user:EwWUe8hEbaKe9LOm@cluster.gbrxtsz.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority&appName=Cluster
       auto-index-creation: true
 
 
