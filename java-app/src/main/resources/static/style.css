@@ -1407,6 +1407,64 @@ body {
 
 /* Modo oscuro eliminado por solicitud: #saveResultModal */
 
+#confirmModal .modal-content {
+    border-radius: 1rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    max-width: 520px;
+    width: 92%;
+}
+
+#confirmModal .modal-header {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+}
+
+#confirmModal .modal-header h3 {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+#confirmModal .modal-close {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.75rem;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#confirmModal .modal-close:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-1px);
+}
+
+#confirmModal .modal-body {
+    text-align: center;
+    padding: 1.5rem 1.25rem;
+}
+
+#confirmModal .modal-footer {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
 /* Animaciones */
 @keyframes fadeIn {
     from { opacity: 0; }

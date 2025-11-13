@@ -3,7 +3,6 @@
 
 // ===== GLOBAL VARIABLES =====
 let authSystem;
-let consultationSystem;
 let veterinarySystem;
 let petToDelete = null;
 
@@ -766,117 +765,6 @@ function showNotification(message, type = 'success') {
     }, 4000);
 }
 
-// ===== CONSULTATION SYSTEM =====
-class ConsultationSystem {
-    constructor() {
-        this.consultations = [];
-        this.nextId = 1;
-        this.loadFromStorage();
-    }
-
-    createConsultation(consultationData) {
-        // Validate required fields
-        if (!consultationData.petId || !consultationData.reason || !consultationData.description || 
-            !consultationData.date || !consultationData.time || !consultationData.veterinarian) {
-            throw new Error('Todos los campos obligatorios deben ser completados');
-        }
-
-        // Validate date is not in the past
-        const consultationDateTime = new Date(`${consultationData.date}T${consultationData.time}`);
-        if (consultationDateTime < new Date()) {
-            throw new Error('No se pueden programar consultas en fechas pasadas');
-        }
-
-        const consultation = {
-            id: this.nextId++,
-            petId: parseInt(consultationData.petId),
-            reason: consultationData.reason,
-            description: consultationData.description,
-            date: consultationData.date,
-            time: consultationData.time,
-            veterinarian: consultationData.veterinarian,
-            priority: consultationData.priority || 'normal',
-            status: 'scheduled',
-            createdAt: new Date().toISOString(),
-            createdBy: authSystem.getCurrentUser()?.id || 1
-        };
-
-        this.consultations.push(consultation);
-        this.saveToStorage();
-        return consultation;
-    }
-
-    getConsultations() {
-        return this.consultations;
-    }
-
-    getConsultationById(id) {
-        return this.consultations.find(c => c.id === id);
-    }
-
-    updateConsultationStatus(id, status) {
-        const consultation = this.getConsultationById(id);
-        if (consultation) {
-            consultation.status = status;
-            consultation.updatedAt = new Date().toISOString();
-            this.saveToStorage();
-            return consultation;
-        }
-        return null;
-    }
-
-    updateConsultation(id, consultationData) {
-        const consultation = this.getConsultationById(id);
-        if (!consultation) {
-            throw new Error('Consulta no encontrada');
-        }
-
-        // Validar campos requeridos
-        if (!consultationData.date || !consultationData.time || !consultationData.reason || 
-            !consultationData.description || !consultationData.veterinarian) {
-            throw new Error('Todos los campos obligatorios deben ser completados');
-        }
-
-        // Actualizar campos
-        if (consultationData.petId) {
-            consultation.petId = parseInt(consultationData.petId, 10);
-        }
-        consultation.date = consultationData.date;
-        consultation.time = consultationData.time;
-        consultation.reason = consultationData.reason;
-        consultation.description = consultationData.description;
-        consultation.veterinarian = consultationData.veterinarian;
-        consultation.priority = consultationData.priority || consultation.priority;
-        consultation.status = consultationData.status || consultation.status;
-        // Campos específicos de consulta
-        consultation.diagnosis = consultationData.diagnosis || consultation.diagnosis || '';
-        consultation.treatment = consultationData.treatment || consultation.treatment || '';
-        consultation.notes = consultationData.notes || consultation.notes || '';
-        consultation.updatedAt = new Date().toISOString();
-
-        this.saveToStorage();
-        return consultation;
-    }
-
-    deleteConsultation(id) {
-        const index = this.consultations.findIndex(c => c.id === id);
-        if (index !== -1) {
-            this.consultations.splice(index, 1);
-            this.saveToStorage();
-            return true;
-        }
-        return false;
-    }
-
-    saveToStorage() {
-        
-    }
-
-    loadFromStorage() {
-        this.consultations = [];
-        this.nextId = 1;
-    }
-}
 
 // ===== VETERINARY SYSTEM CLASS =====
 class VeterinarySystem {
@@ -1937,30 +1825,6 @@ function attachAppointmentTableDelegates() {
     tbody._editDelegatesAttached = true;
 }
 
-// Delegación para botones de edición en la lista de consultas
-function attachConsultationTableDelegates() {
-    const tbody = document.getElementById('consultationsTableBody');
-    if (!tbody || tbody._editDelegatesAttached) return;
-    tbody.addEventListener('click', (e) => {
-        const btn = e.target.closest('button.btn-edit-appointment');
-        if (!btn) return;
-        const tr = btn.closest('tr');
-        const idText = btn.dataset.appointmentId || tr?.dataset?.appointmentId || tr?.querySelector('td')?.textContent;
-        const id = parseInt(idText, 10);
-        if (!isNaN(id)) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🖱️ Click editar capturado (consulta):', id);
-            const now = Date.now();
-            if (!tbody._lastEditTs || (now - tbody._lastEditTs) > 300) {
-                tbody._lastEditTs = now;
-                killActiveBackdrops();
-                requestAnimationFrame(() => openEditAppointmentModal(id));
-            }
-        }
-    });
-    tbody._editDelegatesAttached = true;
-}
 
 // Delegación para celdas de estado en ambas tablas
 function attachStatusCellDelegates() {
@@ -2001,7 +1865,6 @@ function attachStatusCellDelegates() {
         tbody._statusDelegatesAttached = true;
     };
     bindStatusDelegates('appointmentsTableBody');
-    bindStatusDelegates('consultationsTableBody');
 }
 
 function saveAppointmentEdit() {
@@ -2125,49 +1988,6 @@ function confirmCancelAppointment() {
 }
 
 // ====== Consultas (lista y formulario) ======
-function renderConsultationsList() {
-    const tbody = document.getElementById('consultationsTableBody');
-    if (!tbody) return;
-    const data = consultationSystem ? consultationSystem.getConsultations() : [];
-    tbody.innerHTML = '';
-    if (!data.length) {
-        const tr = document.createElement('tr');
-        const td = document.createElement('td');
-        td.colSpan = 9;
-        td.className = 'text-center';
-        td.textContent = 'No hay consultas programadas';
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-        return;
-    }
-    data.forEach(c => {
-        const pet = veterinarySystem ? veterinarySystem.getPetById(c.petId) : null;
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${c.id}</td>
-            <td>${pet?.name || '-'}</td>
-            <td>${pet?.owner?.name || '-'}</td>
-            <td>${c.date || '-'}</td>
-            <td>${c.time || '-'}</td>
-            <td>${c.veterinarian || '-'}</td>
-            <td>${c.reason || '-'}</td>
-            <td class="cell-edit-status" data-appointment-id="${c.id}" tabindex="0" title="Editar estado">
-                ${({scheduled:'Programada',confirmed:'Confirmada',completed:'Completada',cancelled:'Cancelada'})[c.status] || (c.status || 'scheduled')}
-            </td>
-            <td>
-                <button type="button" class="btn btn-outline btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar consulta ${c.id}"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger" onclick="deleteConsultation(${c.id})"><i class="fas fa-trash"></i></button>
-            </td>
-        `;
-        tr.dataset.appointmentId = String(c.id);
-        tbody.appendChild(tr);
-    });
-
-    // Asegurar delegación segura para edición
-    attachConsultationTableDelegates();
-    // Delegación para celdas de estado
-    attachStatusCellDelegates();
-}
 
 function deleteConsultation(id) {
     (async () => {
@@ -2183,7 +2003,6 @@ function deleteConsultation(id) {
                 return;
             }
             showMessage('Consulta eliminada', 'success');
-            renderConsultationsList();
             renderAppointmentsList();
             updateAppointmentStats();
         } catch (e) {
@@ -2192,32 +2011,7 @@ function deleteConsultation(id) {
     })();
 }
 
-function populateConsultationPets() {
-    const petSelect = document.getElementById('consultationPet');
-    const ownerInput = document.getElementById('consultationOwner');
-    if (!petSelect) return;
-    petSelect.innerHTML = '<option value="">Selecciona una mascota</option>';
-    (async () => {
-        try {
-            const res = await fetch('/api/pets');
-            const pets = await res.json();
-            (Array.isArray(pets) ? pets : []).forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.textContent = `${p.name || ''} (${p.ownerName || p.owner || 'Sin dueño'})`;
-                opt.setAttribute('data-owner-name', p.ownerName || p.owner || '');
-                petSelect.appendChild(opt);
-            });
-            petSelect.onchange = () => {
-                const opt = petSelect.options[petSelect.selectedIndex];
-                if (ownerInput) ownerInput.value = opt ? (opt.getAttribute('data-owner-name') || '') : '';
-            };
-        } catch {}
-    })();
-}
-
-// Quick entry desde la tarjeta de inicio (eliminado: Consultas integradas en Citas Médicas)
-function showQuickConsultationModal() {}
+// Quick entry eliminado
 
 
 function registerPet() {
@@ -2666,8 +2460,85 @@ function showMessage(message, type = 'info') {
 }
 
 function showConfirm(title, message, okText, cancelText, onOk) {
-    const result = window.confirm(`${title}\n\n${message}`);
-    if (result && typeof onOk === 'function') onOk();
+    const existing = document.getElementById('confirmModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'confirmModal';
+    modal.className = 'modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+
+    const content = document.createElement('div');
+    content.className = 'modal-content';
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    const h3 = document.createElement('h3');
+    h3.textContent = String(title || 'Confirmación');
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        modal.remove();
+    });
+    header.appendChild(h3);
+    header.appendChild(closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    const p = document.createElement('p');
+    p.innerHTML = String(message || '').replace(/\n/g, '<br>');
+    body.appendChild(p);
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn btn-secondary';
+    cancelBtn.innerHTML = `<i class="fas fa-times" aria-hidden="true"></i> ${cancelText || 'Cancelar'}`;
+    cancelBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+        modal.remove();
+    });
+    const okBtn = document.createElement('button');
+    okBtn.className = 'btn btn-primary';
+    okBtn.innerHTML = `<i class="fas fa-check" aria-hidden="true"></i> ${okText || 'Aceptar'}`;
+    okBtn.addEventListener('click', async () => {
+        try {
+            if (typeof onOk === 'function') await onOk();
+        } finally {
+            modal.style.display = 'none';
+            modal.remove();
+        }
+    });
+    footer.appendChild(cancelBtn);
+    footer.appendChild(okBtn);
+
+    content.appendChild(header);
+    content.appendChild(body);
+    content.appendChild(footer);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+
+    modal.style.display = 'flex';
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            modal.remove();
+        }
+    });
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.style.display = 'none';
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    okBtn.focus();
 }
 
 function updateUserInfo() {
@@ -2785,11 +2656,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Error inicializando auth:', e);
     }
     try {
-        consultationSystem = new ConsultationSystem();
-    } catch (e) {
-        console.error('Error inicializando consultas:', e);
-    }
-    try {
         veterinarySystem = VeterinarySystem.getInstance();
     } catch (e) {
         console.error('Error inicializando sistema veterinario:', e);
@@ -2838,45 +2704,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Wire up envío del formulario de consultas
-    const consultationForm = document.getElementById('consultationFormElement');
-    if (consultationForm) {
-        consultationForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
-                showMessage('No tienes permiso para crear consultas', 'error');
-                return;
-            }
-            (async () => {
-                try {
-                    const uiPriority = document.getElementById('consultationPriority')?.value || 'normal';
-                    const data = {
-                        petId: String(document.getElementById('consultationPet').value || ''),
-                        date: document.getElementById('consultationDate').value,
-                        time: document.getElementById('consultationTime').value,
-                        veterinarian: document.getElementById('consultationVet').value,
-                        reason: document.getElementById('consultationReason').value,
-                        description: document.getElementById('consultationDescription').value,
-                        priority: ({ low:'baja', normal:'media', high:'alta', urgent:'urgente' })[String(uiPriority)] || uiPriority,
-                        status: 'pendiente'
-                    };
-                    const resp = await fetch('/api/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-                    if (!resp.ok) {
-                        const txt = await resp.text();
-                        showMessage(txt || 'Error al crear la consulta', 'error');
-                        return;
-                    }
-                    showMessage('Consulta creada correctamente', 'success');
-                    hideConsultationForm();
-                    renderConsultationsList();
-                    updateAppointmentStats();
-                    renderAppointmentsList();
-                } catch (err) {
-                    showMessage('No se pudo conectar al servidor', 'error');
-                }
-            })();
-        });
-    }
+    // Formulario de consultas eliminado
 
     // Auto-login if user stored
     const current = authSystem && authSystem.getCurrentUser();

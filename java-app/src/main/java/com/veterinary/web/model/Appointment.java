@@ -16,6 +16,7 @@ public class Appointment {
     private String veterinarian; // name or id for simplicity
 
     private String reason;
+    private String description;
     private String priority; // 'alta', 'media', 'baja'
     private String type; // 'consulta', 'vacunación', etc.
     private String status; // 'pendiente', 'confirmada', 'completada', 'cancelada'
@@ -35,6 +36,8 @@ public class Appointment {
     public void setVeterinarian(String veterinarian) { this.veterinarian = veterinarian; }
     public String getReason() { return reason; }
     public void setReason(String reason) { this.reason = reason; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public String getPriority() { return priority; }
     public void setPriority(String priority) { this.priority = priority; }
     public String getType() { return type; }

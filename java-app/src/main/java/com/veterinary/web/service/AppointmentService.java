@@ -52,6 +52,7 @@ public class AppointmentService {
             a.setTime(time);
         }
         a.setReason(updates.getReason());
+        a.setDescription(updates.getDescription());
         a.setPriority(updates.getPriority());
         a.setType(updates.getType());
         a.setStatus(updates.getStatus());
