@@ -19,8 +19,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb+srv://johnceballosbel_db_user:fVviIns3WzS4EUY4@cluster.gbrxtsz.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority&appName=Cluster
-
+      uri: ${SPRING_DATA_MONGODB_URI:${MONGODB_URI:mongodb://localhost:27017/VeterinariaAnimalCare}}
       auto-index-creation: true
 
 

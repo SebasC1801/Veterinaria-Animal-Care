@@ -1762,6 +1762,11 @@ body {
     color: white;
 }
 
+.status-badge.confirmed {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
 .status-badge.completed {
     background: linear-gradient(135deg, #10b981, #059669);
     color: white;
@@ -3389,4 +3394,9 @@ body {
 @media (max-width: 480px) {
     .auth-logo .logo-icon { width: 220px; height: 130px; }
     .auth-logo .logo-image { height: 100%; }
+}
+.btn-cancel-appointment {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.78rem;
+    border-radius: 0.45rem;
 }

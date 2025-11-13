@@ -1434,6 +1434,14 @@ function renderAppointmentsList(filtered = null) {
     data.forEach(c => {
         const pet = veterinarySystem ? veterinarySystem.getPetById(c.petId) : null;
         const tr = document.createElement('tr');
+        const priorityMap = { normal: 'normal', high: 'high', urgent: 'urgent' };
+        const statusTextMap = { scheduled:'Pendiente', confirmed:'Confirmada', completed:'Completada', cancelled:'Cancelada' };
+        const statusClassMap = { scheduled:'scheduled', confirmed:'confirmed', completed:'completed', cancelled:'cancelled' };
+        const priorityLabelMap = { normal:'NORMAL', high:'ALTA', urgent:'URGENTE' };
+        const pClass = priorityMap[c.priority] || 'normal';
+        const sClass = statusClassMap[c.status] || 'scheduled';
+        const sText = statusTextMap[c.status] || 'Pendiente';
+        const pText = priorityLabelMap[pClass];
         tr.innerHTML = `
             <td>${c.id}</td>
             <td>${pet?.name || '-'}</td>
@@ -1442,13 +1450,11 @@ function renderAppointmentsList(filtered = null) {
             <td>${c.time || '-'}</td>
             <td>${c.veterinarian || '-'}</td>
             <td>${c.reason || '-'}</td>
-            <td>${c.priority || 'normal'}</td>
-            <td class="cell-edit-status" data-appointment-id="${c.id}" tabindex="0" title="Editar estado">
-                ${({scheduled:'Programada',confirmed:'Confirmada',completed:'Completada',cancelled:'Cancelada'})[c.status] || (c.status || 'scheduled')}
-            </td>
-            <td>
-                <button type="button" class="btn btn-outline btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar cita ${c.id}"><i class="fas fa-edit"></i></button>
-                <button class="btn btn-danger" onclick="deleteConsultation(${c.id})"><i class="fas fa-trash"></i></button>
+            <td><span class="priority-badge ${pClass}">${pText}</span></td>
+            <td class="cell-edit-status" data-appointment-id="${c.id}" tabindex="0" title="Editar estado"><span class="status-badge ${sClass}">${sText}</span></td>
+            <td class="action-buttons">
+                <button type="button" class="btn-edit btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar cita ${c.id}"><i class="fas fa-edit"></i></button>
+                <button type="button" class="btn-delete btn-cancel-appointment" onclick="openCancelAppointmentModal(${c.id})" aria-label="Cancelar cita ${c.id}"><i class="fas fa-ban"></i> <span>Cancelar cita médica</span></button>
             </td>
         `;
         tr.dataset.appointmentId = String(c.id);
@@ -1532,12 +1538,16 @@ function openEditAppointmentModal(id) {
         document.getElementById('editAppointmentStatus').value = consultation.status || 'scheduled';
 
         // Campos clínicos (consultas)
-        const diag = document.getElementById('editConsultationDiagnosis');
-        const treat = document.getElementById('editConsultationTreatment');
-        const notes = document.getElementById('editConsultationNotes');
+        const diag = document.getElementById('editAppointmentDiagnosis');
+        const treat = document.getElementById('editAppointmentTreatment');
+        const notes = document.getElementById('editAppointmentNotes');
         if (diag) diag.value = consultation.diagnosis || '';
         if (treat) treat.value = consultation.treatment || '';
         if (notes) notes.value = consultation.notes || '';
+        const titleEl = document.getElementById('editAppointmentModalTitle');
+        if (titleEl) titleEl.innerHTML = '<i class="fas fa-calendar-edit" aria-hidden="true"></i> Editar Cita Médica';
+        const saveBtn = modal.querySelector('.modal-footer .btn.btn-primary');
+        if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> Guardar Cambios';
 
         // Mostrar modal y accesibilidad
         modal.classList.add('show');
@@ -1606,36 +1616,24 @@ function ensureEditAppointmentModal() {
     overlay.id = 'editAppointmentModal';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.style.position = 'fixed';
-    overlay.style.inset = '0';
-    overlay.style.background = 'rgba(0,0,0,0.5)';
+    overlay.className = 'modal edit-modal';
     overlay.style.display = 'none';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.zIndex = '1000';
 
     const container = document.createElement('div');
-    container.style.background = '#fff';
+    container.className = 'modal-content';
     container.style.width = '95%';
     container.style.maxWidth = '1000px';
-    container.style.maxHeight = '90vh';
-    container.style.overflow = 'auto';
-    container.style.borderRadius = '8px';
-    container.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
-    container.style.padding = '16px';
 
     const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.justifyContent = 'space-between';
-    header.style.alignItems = 'center';
+    header.className = 'modal-header';
 
-    const title = document.createElement('h2');
+    const title = document.createElement('h3');
     title.textContent = 'Editar cita / consulta';
     title.id = 'editAppointmentModalTitle';
 
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Cerrar';
-    closeBtn.className = 'btn';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.className = 'close-btn';
     closeBtn.addEventListener('click', (e) => {
         e.preventDefault();
         closeEditAppointmentModal();
@@ -1694,9 +1692,7 @@ function ensureEditAppointmentModal() {
 
     // Footer de acciones
     const footer = document.createElement('div');
-    footer.style.display = 'flex';
-    footer.style.justifyContent = 'flex-end';
-    footer.style.gap = '8px';
+    footer.className = 'modal-footer';
 
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
@@ -1743,7 +1739,7 @@ function scheduleNewAppointment() {
         delete modal.dataset.appointmentId;
         modal.dataset.dirty = 'false';
         const title = document.getElementById('editAppointmentModalTitle');
-        if (title) title.textContent = 'Nueva cita médica';
+        if (title) title.innerHTML = '<i class="fas fa-calendar-plus" aria-hidden="true"></i> Agendar Nueva Cita Médica';
 
         // Limpiar y poblar campos
         form.reset();
@@ -1751,6 +1747,8 @@ function scheduleNewAppointment() {
         document.getElementById('editAppointmentPriority').value = 'normal';
         document.getElementById('editAppointmentStatus').value = 'scheduled';
 
+        const saveBtnNew = modal.querySelector('.modal-footer .btn.btn-primary');
+        if (saveBtnNew) saveBtnNew.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> Guardar Cita';
         // Mostrar modal
         modal.classList.add('show');
         modal.style.display = 'flex';
@@ -2077,6 +2075,68 @@ function saveAppointmentEdit() {
     }
 }
 
+// Cancelar una cita médica cambiando su estado a "cancelled"
+function cancelAppointment(id) {
+    try {
+        if (!consultationSystem) {
+            showMessage('Sistema de consultas no disponible', 'error');
+            return;
+        }
+        const updated = consultationSystem.updateConsultationStatus(id, 'cancelled');
+        if (updated) {
+            showMessage('Cita cancelada', 'success');
+            renderAppointmentsList();
+            updateAppointmentStats();
+        } else {
+            showMessage('Cita no encontrada', 'error');
+        }
+    } catch (e) {
+        showMessage('Error al cancelar la cita', 'error');
+    }
+}
+
+function openCancelAppointmentModal(id) {
+    try {
+        const modal = document.getElementById('cancelAppointmentModal');
+        if (!modal) {
+            const ok = window.confirm('¿Confirmas cancelar y eliminar esta cita médica?');
+            if (ok) deleteConsultation(id);
+            return;
+        }
+        modal.dataset.appointmentId = String(id);
+        const petSpan = document.getElementById('cancelAppointmentPetName');
+        let petName = '-';
+        try {
+            const c = consultationSystem && consultationSystem.getConsultationById(id);
+            const p = c && veterinarySystem ? veterinarySystem.getPetById(c.petId) : null;
+            petName = p?.name || '-';
+        } catch {}
+        if (petSpan) petSpan.textContent = petName;
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+    } catch (e) {
+        showMessage('No se pudo abrir la confirmación', 'error');
+    }
+}
+
+function closeCancelAppointmentModal() {
+    const modal = document.getElementById('cancelAppointmentModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        delete modal.dataset.appointmentId;
+    }
+}
+
+function confirmCancelAppointment() {
+    const modal = document.getElementById('cancelAppointmentModal');
+    const id = parseInt(modal?.dataset?.appointmentId || 'NaN', 10);
+    if (!isNaN(id)) {
+        deleteConsultation(id);
+    }
+    closeCancelAppointmentModal();
+}
+
 // ====== Consultas (lista y formulario) ======
 function renderConsultationsList() {
     const tbody = document.getElementById('consultationsTableBody');
@@ -2157,17 +2217,8 @@ function populateConsultationPets() {
     };
 }
 
-// Quick entry desde la tarjeta de inicio
-function showQuickConsultationModal() {
-    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
-        const info = getFeatureInfoData('Citas Médicas');
-        showFeatureInfoModal(info);
-        return;
-    }
-    // Llevar a citas médicas y abrir el editor para crear nueva cita
-    showSection('citas-medicas');
-    scheduleNewAppointment();
-}
+// Quick entry desde la tarjeta de inicio (eliminado: Consultas integradas en Citas Médicas)
+function showQuickConsultationModal() {}
 
 
 function registerPet() {
@@ -2189,6 +2240,7 @@ function registerPet() {
     console.log('🔍 owner:', formData.get('ownerName'));
     console.log('🔍 phone:', formData.get('ownerPhone'));
     console.log('🔍 email:', formData.get('ownerEmail'));
+    console.log('🔍 familyType:', formData.get('familyType'));
     
     // Debugging del selector de razas
     const breedSelectElement = document.getElementById('breed');
@@ -2207,6 +2259,7 @@ function registerPet() {
         age: parseInt(formData.get('age')),
         breed: selectedBreed,
         type: formData.get('animalType'),
+        familyType: formData.get('familyType'),
         owner: formData.get('ownerName'),
         phone: formData.get('ownerPhone'),
         email: formData.get('ownerEmail')
@@ -2267,43 +2320,55 @@ function registerPet() {
         return;
     }
     
-    console.log('✅ Todos los campos son válidos, procediendo con el registro...');
-    
-    console.log('Creando mascota con datos válidos...');
-    const pet = veterinarySystem.buildPet(
-        petData.name,
-        petData.age,
-        petData.breed,
-        petData.type,
-        petData.owner,
-        {
-            phone: petData.phone,
-            email: petData.email
-        }
-    );
-    
-    console.log('Mascota creada:', pet);
-    
-    console.log('Registrando mascota en el sistema...');
-    veterinarySystem.registerPet(pet);
-    
-    console.log('Total mascotas después del registro:', veterinarySystem.getAllPets().length);
-    
-    form.reset();
-    
-    // Resetear el selector de razas
-    const breedSelectReset = document.getElementById('breed');
-    const breedInputReset = document.getElementById('breed_input');
-    if (breedSelectReset) breedSelectReset.style.display = 'block';
-    if (breedInputReset) breedInputReset.style.display = 'none';
-    
-    showMessage('Mascota registrada exitosamente con ID: ' + pet.id, 'success');
-    
-    console.log('Actualizando lista de mascotas...');
-    updatePetsList();
-    showSystemStats();
-    
-    console.log('=== REGISTRO COMPLETADO ===');
+    const summary = `Nombre: ${petData.name}\nRaza: ${petData.breed}\nTipo: ${petData.type}\nDueño: ${petData.owner}`;
+    showConfirm('Confirmar registro', `¿Deseas guardar esta mascota?\n\n${summary}`, 'Guardar', 'Cancelar', () => {
+        const pet = veterinarySystem.buildPet(
+            petData.name,
+            petData.age,
+            petData.breed,
+            petData.type,
+            petData.owner,
+            {
+                phone: petData.phone,
+                email: petData.email
+            }
+        );
+        veterinarySystem.registerPet(pet);
+        (async () => {
+            try {
+                const resp = await fetch('/api/pets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: petData.name,
+                        age: petData.age,
+                        breed: petData.breed,
+                        type: petData.type,
+                        familyType: petData.familyType,
+                        ownerName: petData.owner,
+                        ownerPhone: petData.phone,
+                        ownerEmail: petData.email
+                    })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (!resp.ok || data.error) {
+                    showMessage(data.error || 'Error al guardar en el servidor', 'error');
+                } else {
+                    showMessage('Guardado en servidor correctamente (ID: ' + (data.id || 'N/A') + ')', 'success');
+                }
+            } catch (e) {
+                showMessage('No se pudo conectar al servidor: ' + (e.message || e), 'error');
+            }
+        })();
+        form.reset();
+        const breedSelectReset = document.getElementById('breed');
+        const breedInputReset = document.getElementById('breed_input');
+        if (breedSelectReset) breedSelectReset.style.display = 'block';
+        if (breedInputReset) breedInputReset.style.display = 'none';
+        showMessage('Mascota registrada exitosamente con ID: ' + pet.id, 'success');
+        updatePetsList();
+        showSystemStats();
+    });
 }
 
 function searchPets() {
@@ -2426,49 +2491,66 @@ function editPet(petId) {
         return;
     }
     
-    // Crear formulario de edición
     const editForm = document.createElement('div');
-    editForm.className = 'edit-modal';
+    editForm.className = 'modal edit-modal';
     editForm.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content edit-appointment-modal-content" role="document">
             <div class="modal-header">
-                <h3>Editar Mascota: ${pet.name}</h3>
-                <button onclick="closeEditModal()" class="close-btn">&times;</button>
+                <h3 class="modal-title"><i class="fas fa-paw" aria-hidden="true"></i> Editar Mascota</h3>
+                <button class="modal-close" onclick="closeEditModal()" aria-label="Cerrar"><i class="fas fa-times" aria-hidden="true"></i></button>
             </div>
-            <form id="editPetForm" class="edit-form">
-                <div class="form-group">
-                    <label for="editName">Nombre *</label>
-                    <input type="text" id="editName" name="name" value="${pet.name}" required>
-                </div>
-                <div class="form-group">
-                    <label for="editAge">Edad *</label>
-                    <input type="number" id="editAge" name="age" value="${pet.age}" required>
-                </div>
-                <div class="form-group">
-                    <label for="editBreed">Raza *</label>
-                    <input type="text" id="editBreed" name="breed" value="${pet.breed}" required>
-                </div>
-                <div class="form-group">
-                    <label for="editOwner">Dueño *</label>
-                    <input type="text" id="editOwner" name="owner" value="${pet.owner}" required>
-                </div>
-                <div class="form-group">
-                    <label for="editPhone">Teléfono</label>
-                    <input type="text" id="editPhone" name="phone" value="${pet.ownerPhone || ''}">
-                </div>
-                <div class="form-group">
-                    <label for="editEmail">Email</label>
-                    <input type="email" id="editEmail" name="email" value="${pet.ownerEmail || ''}">
-                </div>
-                <div class="form-actions">
-                    <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                <form id="editPetForm" class="edit-appointment-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="editName">Nombre *</label>
+                        <input type="text" class="form-control" id="editName" name="name" value="${pet.name}" required>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="editAge">Edad *</label>
+                            <input type="number" class="form-control" id="editAge" name="age" value="${pet.age}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editBreed">Raza *</label>
+                            <input type="text" class="form-control" id="editBreed" name="breed" value="${pet.breed}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editOwner">Dueño *</label>
+                        <input type="text" class="form-control" id="editOwner" name="owner" value="${pet.owner}" required>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label" for="editPhone">Teléfono</label>
+                            <input type="text" class="form-control" id="editPhone" name="phone" value="${pet.ownerPhone || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="editEmail">Email</label>
+                            <input type="email" class="form-control" id="editEmail" name="email" value="${pet.ownerEmail || ''}">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()"><i class="fas fa-times" aria-hidden="true"></i> Cancelar</button>
+                <button type="submit" form="editPetForm" class="btn btn-primary"><i class="fas fa-save" aria-hidden="true"></i> Guardar Cambios</button>
+            </div>
         </div>
     `;
     
     document.body.appendChild(editForm);
+    editForm.classList.add('show');
+    editForm.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // Cerrar al hacer clic fuera del contenido
+    editForm.addEventListener('click', (e) => {
+        if (e.target === editForm) closeEditModal();
+    });
+    // Cerrar con Escape
+    editForm.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeEditModal();
+    });
     
     // Manejar envío del formulario
     document.getElementById('editPetForm').addEventListener('submit', function(e) {
@@ -2554,6 +2636,7 @@ function closeEditModal() {
     if (modal) {
         modal.remove();
     }
+    document.body.style.overflow = '';
 }
 
 // Eliminada funcionalidad de clonado de mascotas
@@ -2576,19 +2659,22 @@ function showSystemStats() {
 }
 
 function showMessage(message, type = 'info') {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message message-${type}`;
-    messageDiv.textContent = message;
-    
-    // Agregar al DOM
-    document.body.appendChild(messageDiv);
-    
-    // Remover después de 3 segundos
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
-        }
-    }, 3000);
+    const map = { info: 'success', success: 'success', error: 'error', warning: 'error' };
+    const finalType = map[type] || 'success';
+    try {
+        showNotification(message, finalType);
+    } catch (_) {
+        const fallback = document.createElement('div');
+        fallback.className = `notification ${finalType === 'error' ? 'notification-error' : ''}`;
+        fallback.innerHTML = `<div class="notification-content"><span>${message}</span></div>`;
+        document.body.appendChild(fallback);
+        setTimeout(() => fallback.remove(), 4000);
+    }
+}
+
+function showConfirm(title, message, okText, cancelText, onOk) {
+    const result = window.confirm(`${title}\n\n${message}`);
+    if (result && typeof onOk === 'function') onOk();
 }
 
 function updateUserInfo() {
@@ -2721,6 +2807,43 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeRegistrationWizard();
     configureNavigation();
     setupModalClickOutside();
+
+    const animalTypeSelect = document.getElementById('animal_type');
+    if (animalTypeSelect) {
+        animalTypeSelect.addEventListener('change', () => {
+            updateBreedOptions();
+        });
+        updateBreedOptions();
+    }
+
+    const breedSelect = document.getElementById('breed');
+    const breedInput = document.getElementById('breed_input');
+    if (breedSelect) {
+        breedSelect.addEventListener('change', () => {
+            const v = breedSelect.value;
+            if (v === 'Escribir manualmente') {
+                breedSelect.style.display = 'none';
+                if (breedInput) {
+                    breedInput.style.display = 'block';
+                    breedInput.value = '';
+                    breedInput.focus();
+                }
+            } else {
+                if (breedInput) {
+                    breedInput.style.display = 'none';
+                    breedInput.value = '';
+                }
+                breedSelect.style.display = 'block';
+            }
+        });
+    }
+
+    const saveBtn = document.getElementById('savePetDirectBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            registerPet();
+        });
+    }
 
     // Wire up envío del formulario de consultas
     const consultationForm = document.getElementById('consultationFormElement');

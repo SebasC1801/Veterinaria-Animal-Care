@@ -26,9 +26,6 @@
                     <a href="#registros" class="nav-link">
                         <i class="fas fa-list"></i> Registros
                     </a>
-                    <a href="#consultas" class="nav-link">
-                        <i class="fas fa-stethoscope"></i> Consultas
-                    </a>
                     <a href="#citas-medicas" class="nav-link">
                         <i class="fas fa-calendar-check"></i> Citas Médicas
                     </a>
@@ -202,36 +199,7 @@
                     </div>
                 </div>
 
-                <!-- Statistics Cards -->
-                <div class="stats-section">
-                    <div class="grid grid-cols-3 gap-6" style="max-width: 1000px; margin: 0 auto; justify-items: center;">
-                        <div class="card text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-paw text-3xl text-primary-color"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-amber-800" id="totalPets">0</h3>
-                            <p class="text-amber-700">Mascotas Registradas</p>
-                        </div>
-                        
-                        <div class="card text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-user-md text-3xl text-secondary-color"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-amber-800">3</h3>
-                            <p class="text-amber-700">Veterinarios</p>
-                        </div>
-                        
-                        <div class="card text-center">
-                            <div class="mb-4">
-                                <i class="fas fa-calendar-alt text-3xl text-accent-color"></i>
-                            </div>
-                            <h3 class="text-2xl font-bold text-amber-800">12</h3>
-                            <p class="text-amber-700">Citas Programadas</p>
-                        </div>
-                        
-
-                    </div>
-                </div>
+                
 
                 <!-- Description Section -->
                 <div class="description-section">
@@ -253,13 +221,13 @@
                                     </div>
                                 </div>
                                 
-                                <div class="feature-item" onclick="showQuickConsultationModal()" style="cursor: pointer;" title="Crear consulta rápida">
+                                <div class="feature-item" onclick="showSection('citas-medicas')" style="cursor: pointer;" title="Gestionar consultas integradas en Citas Médicas">
                                     <div class="feature-icon">
                                         <i class="fas fa-stethoscope"></i>
                                     </div>
                                     <div class="feature-content">
-                                        <h3>Gestión de Consultas</h3>
-                                        <p>Programa, gestiona y realiza seguimiento de consultas médicas. Los veterinarios pueden crear expedientes detallados, prescribir tratamientos y mantener un historial médico completo.</p>
+                                        <h3>Consultas Integradas</h3>
+                                        <p>Las consultas se gestionan desde Citas Médicas en un flujo unificado con edición y seguimiento.</p>
                                     </div>
                                 </div>
                                 
@@ -546,7 +514,6 @@
                                 <i class="fas fa-calendar-plus"></i>
                                 Agendar Cita Médica
                             </button>
-                            <span class="text-muted" style="font-size: 0.9rem;">Edita estados directamente desde la lista o el editor.</span>
                         </div>
 
                         <!-- Filtros y búsqueda -->
@@ -576,48 +543,7 @@
                             </button>
                         </div>
                         
-                        <!-- Estadísticas de citas -->
-                        <div class="appointment-stats">
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 id="totalAppointments">0</h3>
-                                    <p>Total Citas</p>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-clock"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 id="pendingAppointments">0</h3>
-                                    <p>Pendientes</p>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 id="completedAppointments">0</h3>
-                                    <p>Completadas</p>
-                                </div>
-                            </div>
-                            
-                            <div class="stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 id="urgentAppointments">0</h3>
-                                    <p>Urgentes</p>
-                                </div>
-                            </div>
-                        </div>
+                        
                         
                         <!-- Lista de citas -->
                         <div class="table-container">
@@ -688,6 +614,30 @@
         </div>
     </div>
 
+    <div id="cancelAppointmentModal" class="modal" style="display: none; align-items: center; justify-content: center;">
+        <div class="modal-content" style="max-width: 520px; width: 92%;">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirmar cancelación</h3>
+                <button class="close-btn" onclick="closeCancelAppointmentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Deseas cancelar esta cita médica y eliminarla de la lista?</p>
+                <div class="pet-info">
+                    <p><strong>Mascota:</strong> <span id="cancelAppointmentPetName">-</span></p>
+                </div>
+                <p class="warning-text">Al confirmar, la cita desaparecerá inmediatamente.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeCancelAppointmentModal()">
+                    <i class="fas fa-times"></i> Volver
+                </button>
+                <button class="btn btn-danger" onclick="confirmCancelAppointment()">
+                    <i class="fas fa-trash"></i> Cancelar cita médica
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de edición de citas y consultas (pantalla completa, accesible) -->
     <div id="editAppointmentModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="editAppointmentModalTitle" tabindex="-1">
         <div class="modal-content edit-appointment-modal-content" role="document">
@@ -701,84 +651,57 @@
             </div>
             <div class="modal-body">
                 <form id="editAppointmentForm" class="edit-appointment-form" novalidate>
-                    <!-- Paciente y propietario -->
-                    <div class="form-section">
-                        <h4 class="form-section-title">
-                            <i class="fas fa-paw" aria-hidden="true"></i> Paciente
-                        </h4>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentPet">Mascota *</label>
-                                <select class="form-control form-select" id="editAppointmentPet" name="petId" required></select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentOwnerName">Propietario</label>
-                                <input type="text" class="form-control" id="editAppointmentOwnerName" name="ownerName" readonly aria-readonly="true">
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentPet">Mascota *</label>
+                        <select class="form-control form-select" id="editAppointmentPet" name="petId" required></select>
                     </div>
-
-                    <!-- Información de la Cita / Consulta -->
-                    <div class="form-section">
-                        <h4 class="form-section-title">
-                            <i class="fas fa-calendar-alt" aria-hidden="true"></i> Información
-                        </h4>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentDate">Fecha *</label>
-                                <input type="date" class="form-control" id="editAppointmentDate" name="date" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentTime">Hora *</label>
-                                <input type="time" class="form-control" id="editAppointmentTime" name="time" required>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentOwnerName">Propietario</label>
+                        <input type="text" class="form-control" id="editAppointmentOwnerName" name="ownerName" readonly aria-readonly="true">
                     </div>
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label" for="editAppointmentDescription">Descripción *</label>
-                            <textarea class="form-control" id="editAppointmentDescription" name="description" placeholder="Describe los síntomas o motivo de la consulta..." rows="4" required></textarea>
+                            <label class="form-label" for="editAppointmentDate">Fecha *</label>
+                            <input type="date" class="form-control" id="editAppointmentDate" name="date" required>
                         </div>
-                    </div>
-                    <!-- Veterinario y Prioridad -->
-                    <div class="form-section">
-                        <h4 class="form-section-title">
-                            <i class="fas fa-user-md" aria-hidden="true"></i> Asignación y Prioridad
-                        </h4>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentVeterinarian">Veterinario *</label>
-                                <select class="form-control form-select" id="editAppointmentVeterinarian" name="veterinarian" required>
-                                    <option value="">Selecciona un veterinario</option>
-                                    <option value="dr_garcia">Dr. García</option>
-                                    <option value="dra_martinez">Dra. Martínez</option>
-                                    <option value="dr_rodriguez">Dr. Rodríguez</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="editAppointmentPriority">Prioridad *</label>
-                                <select class="form-control form-select" id="editAppointmentPriority" name="priority" required>
-                                    <option value="normal">Normal</option>
-                                    <option value="high">Alta</option>
-                                    <option value="urgent">Urgente</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Estado -->
-                    <div class="form-section">
-                        <h4 class="form-section-title">
-                            <i class="fas fa-info-circle" aria-hidden="true"></i> Estado
-                        </h4>
                         <div class="form-group">
-                            <label class="form-label" for="editAppointmentStatus">Estado *</label>
-                            <select class="form-control form-select" id="editAppointmentStatus" name="status" required>
-                                <option value="scheduled">Pendiente</option>
-                                <option value="confirmed">Confirmada</option>
-                                <option value="completed">Completada</option>
-                                <option value="cancelled">Cancelada</option>
-                            </select>
+                            <label class="form-label" for="editAppointmentTime">Hora *</label>
+                            <input type="time" class="form-control" id="editAppointmentTime" name="time" required>
                         </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentVeterinarian">Veterinario *</label>
+                        <select class="form-control form-select" id="editAppointmentVeterinarian" name="veterinarian" required>
+                            <option value="">Selecciona un veterinario</option>
+                            <option value="dr_garcia">Dr. García</option>
+                            <option value="dra_martinez">Dra. Martínez</option>
+                            <option value="dr_rodriguez">Dr. Rodríguez</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentReason">Motivo *</label>
+                        <input type="text" class="form-control" id="editAppointmentReason" name="reason" placeholder="Motivo de la consulta..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentDescription">Descripción *</label>
+                        <textarea class="form-control" id="editAppointmentDescription" name="description" placeholder="Describe los síntomas o detalles relevantes..." rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentPriority">Prioridad *</label>
+                        <select class="form-control form-select" id="editAppointmentPriority" name="priority" required>
+                            <option value="normal">Normal</option>
+                            <option value="high">Alta</option>
+                            <option value="urgent">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editAppointmentStatus">Estado *</label>
+                        <select class="form-control form-select" id="editAppointmentStatus" name="status" required>
+                            <option value="scheduled">Pendiente</option>
+                            <option value="confirmed">Confirmada</option>
+                            <option value="completed">Completada</option>
+                            <option value="cancelled">Cancelada</option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -794,7 +717,6 @@
     </div>
 
     <style>
-        /* Modal pantalla completa y responsive */
         .modal {
             position: fixed;
             inset: 0;
@@ -802,21 +724,140 @@
             align-items: center;
             justify-content: center;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 20000;
         }
         .modal.show { display: flex; }
+        .modal > .modal-footer { display: none !important; }
         .edit-appointment-modal-content {
-            width: 90vw;
-            max-width: 960px;
-            max-height: 90vh;
-            overflow: auto;
+            width: 100%;
+            max-width: 560px;
+            max-height: 88vh;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            margin: 0;
+            overflow: hidden !important;
         }
+        .edit-appointment-modal-content .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #FEF3C7;
+            border-bottom: 1px solid #FDE68A;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+        .edit-appointment-modal-content .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #92400E;
+        }
+        .edit-appointment-modal-content .modal-title i {
+            color: #D97706;
+            margin-right: 8px;
+        }
+        .edit-appointment-modal-content .modal-close {
+            background: transparent;
+            border: none;
+            color: #B45309;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+        .edit-appointment-modal-content .modal-body {
+            padding: 18px 20px;
+            padding-right: 24px;
+            overflow-y: auto;
+            scrollbar-gutter: stable both-edges;
+            overscroll-behavior: contain;
+            padding-bottom: 24px;
+            background: #ffffff;
+        }
+        .edit-appointment-form label {
+            font-weight: 600;
+            color: #6B7280;
+            margin-bottom: 6px;
+        }
+        .edit-appointment-modal-content .form-section {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: none;
+            border: 1px solid #FDE68A;
+            border-left: 4px solid #F59E0B;
+            margin-bottom: 16px;
+        }
+        .edit-appointment-modal-content .form-section:last-child { margin-bottom: 0; }
+        .edit-appointment-form select,
+        .edit-appointment-form input[type="text"],
+        .edit-appointment-form input[type="date"],
+        .edit-appointment-form input[type="time"],
+        .edit-appointment-form textarea {
+            width: 100%;
+            border: 2px solid #FECF67;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: box-shadow .2s ease, border-color .2s ease;
+            background: #fff;
+        }
+        #editAppointmentTime { border-color: #10B981; }
+        .edit-appointment-form textarea::placeholder,
+        .edit-appointment-form input::placeholder { color: #D97706; opacity: 0.7; }
+        .edit-appointment-form select:focus,
+        .edit-appointment-form input:focus,
+        .edit-appointment-form textarea:focus {
+            box-shadow: 0 0 0 3px rgba(254, 215, 135, 0.5);
+            border-color: #F59E0B;
+        }
+        .edit-appointment-modal-content .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 16px 20px;
+            background: #FFFAEB;
+            border-top: 1px solid #FDE68A;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0;
+        }
+        .edit-appointment-modal-content .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        .edit-appointment-modal-content .btn-secondary {
+            background: #FEF3C7;
+            border: 2px solid #EAB308;
+            color: #6B4F1D;
+        }
+        .edit-appointment-modal-content .btn-primary {
+            background: #D4A017;
+            border: 2px solid #B08912;
+            color: #fff;
+        }
+        .edit-appointment-modal-content .btn i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: #FDE68A;
+            color: #92400E;
+        }
+        .edit-appointment-modal-content .btn-primary i { background: #B08912; color: #fff; }
         @media (max-width: 768px) {
-            .edit-appointment-modal-content {
-                width: 95vw;
-                height: 90vh;
-                border-radius: 8px;
-            }
+            .edit-appointment-modal-content { max-width: 92vw; border-radius: 14px; }
+            .edit-appointment-modal-content .modal-body { flex: 1 1 auto; }
         }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
