@@ -26,6 +26,10 @@ public class AppointmentService {
         long now = System.currentTimeMillis();
         appointment.setCreatedAt(now);
         appointment.setUpdatedAt(now);
+        if (appointment.getHistory() == null) {
+            appointment.setHistory(new java.util.ArrayList<>());
+        }
+        appointment.getHistory().add("creada:" + now);
         return appointmentRepository.save(appointment);
     }
 
@@ -51,11 +55,12 @@ public class AppointmentService {
             a.setDate(date);
             a.setTime(time);
         }
-        a.setReason(updates.getReason());
-        a.setDescription(updates.getDescription());
-        a.setPriority(updates.getPriority());
-        a.setType(updates.getType());
-        a.setStatus(updates.getStatus());
+        if (updates.getReason() != null) a.setReason(updates.getReason());
+        if (updates.getDescription() != null) a.setDescription(updates.getDescription());
+        if (updates.getPriority() != null) a.setPriority(updates.getPriority());
+        if (updates.getType() != null) a.setType(updates.getType());
+        if (updates.getStatus() != null) a.setStatus(updates.getStatus());
+        if (updates.getHistory() != null) a.setHistory(updates.getHistory());
         a.setUpdatedAt(System.currentTimeMillis());
         return appointmentRepository.save(a);
     }

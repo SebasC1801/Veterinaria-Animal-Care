@@ -30,6 +30,9 @@ class AuthenticationSystem {
                 canManagePets: false,
                 canRegisterPets: true,
                 canManageAppointments: false,
+                canViewAppointments: true,
+                canScheduleOwnAppointments: true,
+                canCancelOwnAppointments: true,
                 canSetAppointmentPriority: false,
                 canDeletePets: false,
                 canViewAllData: false,
@@ -1157,7 +1160,7 @@ function configureNavigation() {
         'registro': 'canRegisterPets',
         'registros': 'canViewAllData',
         'consultas': 'canManageAppointments',
-        'citas-medicas': 'canManageAppointments'
+        'citas-medicas': null
     };
 
     const currentUser = authSystem && authSystem.getCurrentUser ? authSystem.getCurrentUser() : null;
@@ -1172,7 +1175,7 @@ function configureNavigation() {
         console.log(`  ${index + 1}. ${link.textContent.trim()} -> ${sectionId}`);
 
         const required = permissionsBySection[sectionId];
-        const allowed = !required || (authSystem && authSystem.hasPermission(required));
+        const allowed = !required || (authSystem && authSystem.hasPermission(required)) || (sectionId === 'citas-medicas' && authSystem && (authSystem.hasPermission('canManageAppointments') || authSystem.hasPermission('canViewAppointments')));
         // Ocultar si no está permitido (Inicio siempre visible al no tener permiso asignado)
         link.style.display = allowed ? '' : 'none';
 
@@ -1218,12 +1221,19 @@ function showSection(sectionId) {
         'registro': 'canRegisterPets',
         'registros': 'canViewAllData',
         'consultas': 'canManageAppointments',
-        'citas-medicas': 'canManageAppointments'
+        'citas-medicas': null
     };
     const requiredPermission = sectionPermissions[sectionId];
     if (requiredPermission && (!authSystem || !authSystem.hasPermission(requiredPermission))) {
         showMessage('No tienes permiso para acceder a esta sección', 'error');
         sectionId = 'inicio';
+    }
+    if (sectionId === 'citas-medicas') {
+        const ok = authSystem && (authSystem.hasPermission('canManageAppointments') || authSystem.hasPermission('canViewAppointments'));
+        if (!ok) {
+            showMessage('No tienes permiso para acceder a Citas Médicas', 'error');
+            sectionId = 'inicio';
+        }
     }
     
     // Ocultar todas las secciones
@@ -1236,6 +1246,9 @@ function showSection(sectionId) {
     if (targetSection) {
         targetSection.classList.add('active');
         console.log('✅ Sección mostrada:', sectionId);
+        if (sectionId === 'inicio') {
+            updateUserInfo();
+        }
     } else {
         console.error('❌ Sección no encontrada:', sectionId);
     }
@@ -1267,7 +1280,7 @@ function showSection(sectionId) {
 // ====== SECCIONES: Citas y Consultas ======
 function showAppointmentsSection() {
     // Gating por permisos
-    if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+    if (!authSystem || (!authSystem.hasPermission('canManageAppointments') && !authSystem.hasPermission('canViewAppointments'))) {
         const info = getFeatureInfoData('Citas Médicas');
         showFeatureInfoModal(info);
         return;
@@ -1311,6 +1324,10 @@ async function renderAppointmentsList(filtered = null) {
             const statusText = ({ scheduled:'Pendiente', confirmed:'Confirmada', completed:'Completada', cancelled:'Cancelada' })[statusKey];
             const prioKey = ({ 'baja':'low', 'media':'normal', 'alta':'high' })[String(c.priority || '').toLowerCase()] || 'normal';
             const prioText = ({ low:'BAJA', normal:'NORMAL', high:'ALTA', urgent:'URGENTE' })[prioKey];
+            const isVet = authSystem && authSystem.hasPermission('canManageAppointments');
+            const currentUser = authSystem && authSystem.getCurrentUser ? authSystem.getCurrentUser() : null;
+            const isOwner = currentUser && pet && (String((pet.ownerEmail||'')).toLowerCase() === String(currentUser.email||'').toLowerCase());
+            const isUser = currentUser && String(currentUser.role||'') === 'user';
             tr.innerHTML = `
                 <td>${c.id}</td>
                 <td>${pet?.name || '-'}</td>
@@ -1320,10 +1337,10 @@ async function renderAppointmentsList(filtered = null) {
                 <td>${c.veterinarian || '-'}</td>
                 <td>${c.reason || '-'}</td>
                 <td><span class="priority-badge ${prioKey}">${prioText}</span></td>
-                <td class="cell-edit-status" data-appointment-id="${c.id}" tabindex="0" title="Editar estado"><span class="status-badge ${statusKey}">${statusText}</span></td>
+                <td ${isVet ? 'class="cell-edit-status" data-appointment-id="'+c.id+'" tabindex="0" title="Editar estado"' : ''}><span class="status-badge ${statusKey}">${statusText}</span></td>
                 <td class="action-buttons">
-                    <button type="button" class="btn-edit btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar cita ${c.id}"><i class="fas fa-edit"></i></button>
-                    <button type="button" class="btn-delete btn-cancel-appointment" onclick="openCancelAppointmentModal('${c.id}')" aria-label="Cancelar cita ${c.id}"><i class="fas fa-ban"></i> <span>Cancelar cita médica</span></button>
+                    ${isVet ? `<button type="button" class="btn-edit btn-edit-appointment" data-appointment-id="${c.id}" aria-label="Editar cita ${c.id}"><i class="fas fa-edit"></i></button>` : ''}
+                    ${(isVet || isUser) ? `<button type="button" class="btn-delete btn-cancel-appointment" onclick="openCancelAppointmentModal('${c.id}')" aria-label="Cancelar cita ${c.id}"><i class="fas fa-ban"></i> <span>Cancelar cita médica</span></button>` : ''}
                 </td>
             `;
             tr.dataset.appointmentId = String(c.id);
@@ -1585,6 +1602,14 @@ function ensureEditAppointmentModal() {
     overlay.appendChild(container);
     document.body.appendChild(overlay);
 
+    const isVet = authSystem && authSystem.hasPermission('canManageAppointments');
+    if (!isVet) {
+        const prio = document.getElementById('editAppointmentPriority');
+        const status = document.getElementById('editAppointmentStatus');
+        if (prio) prio.closest('.form-group').style.display = 'none';
+        if (status) status.closest('.form-group').style.display = 'none';
+    }
+
     // Accesibilidad: cerrar con Escape
     overlay.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeEditAppointmentModal();
@@ -1594,7 +1619,7 @@ function ensureEditAppointmentModal() {
 // Inicia flujo de nueva cita médica reutilizando el editor unificado
 function scheduleNewAppointment() {
     try {
-        if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
+        if (!authSystem || !authSystem.isLoggedIn()) {
             const info = getFeatureInfoData('Citas Médicas');
             showFeatureInfoModal(info);
             return;
@@ -1829,8 +1854,10 @@ function attachAppointmentTableDelegates() {
 // Delegación para celdas de estado en ambas tablas
 function attachStatusCellDelegates() {
     const bindStatusDelegates = (tbodyId) => {
+        const isVet = authSystem && authSystem.hasPermission('canManageAppointments');
         const tbody = document.getElementById(tbodyId);
         if (!tbody || tbody._statusDelegatesAttached) return;
+        if (!isVet) { tbody._statusDelegatesAttached = true; return; }
         tbody.addEventListener('click', (e) => {
             const statusCell = e.target.closest('.cell-edit-status');
             if (!statusCell) return;
@@ -1926,7 +1953,13 @@ function saveAppointmentEdit() {
 function cancelAppointment(id) {
     (async () => {
         try {
-            const resp = await fetch(`/api/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelada' }) });
+            const currentUser = authSystem && authSystem.getCurrentUser ? authSystem.getCurrentUser() : null;
+            const headers = { 'Content-Type': 'application/json' };
+            if (currentUser) {
+                headers['X-User-Email'] = String(currentUser.email||'');
+                headers['X-User-Role'] = String(currentUser.role||'');
+            }
+            const resp = await fetch(`/api/appointments/${id}`, { method: 'PUT', headers, body: JSON.stringify({ status: 'cancelada' }) });
             if (!resp.ok) {
                 const txt = await resp.text();
                 showMessage(txt || 'Error al cancelar la cita', 'error');
@@ -1946,7 +1979,7 @@ function openCancelAppointmentModal(id) {
         const modal = document.getElementById('cancelAppointmentModal');
         if (!modal) {
             const ok = window.confirm('¿Confirmas cancelar y eliminar esta cita médica?');
-            if (ok) deleteConsultation(id);
+            if (ok) deleteAppointment(id);
             return;
         }
         modal.dataset.appointmentId = String(id);
@@ -1982,27 +2015,29 @@ function confirmCancelAppointment() {
     const modal = document.getElementById('cancelAppointmentModal');
     const id = modal?.dataset?.appointmentId || '';
     if (id) {
-        deleteConsultation(id);
+        deleteAppointment(id);
     }
     closeCancelAppointmentModal();
 }
 
 // ====== Consultas (lista y formulario) ======
 
-function deleteConsultation(id) {
+function deleteAppointment(id) {
     (async () => {
         try {
-            if (!authSystem || !authSystem.hasPermission('canManageAppointments')) {
-                showMessage('No tienes permiso para eliminar consultas', 'error');
-                return;
+            const currentUser = authSystem && authSystem.getCurrentUser ? authSystem.getCurrentUser() : null;
+            const headers = {};
+            if (currentUser) {
+                headers['X-User-Email'] = String(currentUser.email||'');
+                headers['X-User-Role'] = String(currentUser.role||'');
             }
-            const resp = await fetch(`/api/appointments/${id}`, { method: 'DELETE' });
+            const resp = await fetch(`/api/appointments/${id}`, { method: 'DELETE', headers });
             if (resp.status !== 204 && !resp.ok) {
                 const txt = await resp.text();
-                showMessage(txt || 'Error al eliminar la consulta', 'error');
+                showMessage(txt || 'Error al eliminar la cita', 'error');
                 return;
             }
-            showMessage('Consulta eliminada', 'success');
+            showMessage('Cita eliminada', 'success');
             renderAppointmentsList();
             updateAppointmentStats();
         } catch (e) {

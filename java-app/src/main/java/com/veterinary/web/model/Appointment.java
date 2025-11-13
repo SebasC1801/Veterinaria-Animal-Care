@@ -3,6 +3,7 @@ package com.veterinary.web.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
 
 @Document(collection = "appointments")
 public class Appointment {
@@ -27,6 +28,7 @@ public class Appointment {
 
     private long createdAt;
     private long updatedAt;
+    private List<String> history;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -52,4 +54,6 @@ public class Appointment {
     public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
     public long getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
+    public List<String> getHistory() { return history; }
+    public void setHistory(List<String> history) { this.history = history; }
 }

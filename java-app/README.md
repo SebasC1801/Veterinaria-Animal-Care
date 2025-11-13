@@ -113,6 +113,22 @@ mvn -q spring-boot:run -DskipTests
 
 Si no defines variables, se usará la URI por defecto definida en `application.yml`.
 
+## Permisos y roles
+
+- Veterinario:
+  - Puede gestionar citas (crear, editar estado, cancelar) y ver todas las citas.
+  - Mantiene todas las funcionalidades existentes.
+
+- Usuario:
+  - Puede agendar nuevas citas médicas (fecha/hora disponibles, motivo, confirmación).
+  - Puede cancelar únicamente sus propias citas (requiere confirmación; se registra en historial y se notifica en la interfaz).
+  - No puede editar citas ni cambiar su estado por ningún método; se ocultan opciones de edición en la UI y se valida en backend.
+  - No puede reactivar citas canceladas.
+
+Notas técnicas:
+- El frontend adiciona encabezados `X-User-Email` y `X-User-Role` en creación y cancelación de citas.
+- El backend valida que un usuario solo pueda cancelar citas de mascotas cuyo `ownerEmail` coincide con su correo y rechaza ediciones.
+
 ## Notas sobre la Conversión
 
 Este proyecto es una conversión de Python a Java, manteniendo la estructura funcional y enfocando el sistema en flujos reales de Animal Care. Se retiraron materiales y rutas de demostración de “patrones”.
