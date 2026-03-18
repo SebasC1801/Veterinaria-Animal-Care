@@ -1,23 +1,15 @@
 package com.veterinary.web.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document(collection = "pets")
 public class Pet {
-    @Id
     private String id;
-
     private String name;
     private Integer age; // years
     private String breed;
     private String type; // e.g., 'dog', 'cat', 'bird', 'reptile', etc.
     private String familyType; // e.g., 'mamifero', 'ave', etc.
-
     private String ownerName;
     private String ownerPhone;
     private String ownerEmail;
-
     private long createdAt;
     private long updatedAt;
 

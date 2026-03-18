@@ -1,5 +1,5 @@
 server:
-  port: 8086
+  port: ${PORT:8086}
   servlet:
     context-path: /
 
@@ -15,12 +15,11 @@ spring:
     encoding: UTF-8
     mode: HTML
   
-
-
-  data:
-    mongodb:
-      uri: mongodb+srv://johnceballosbel_db_user:EwWUe8hEbaKe9LOm@cluster.gbrxtsz.mongodb.net/VeterinariaAnimalCare?retryWrites=true&w=majority&appName=Cluster
-      auto-index-creation: true
+  # MongoDB deshabilitado - usando datos en memoria
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
 
 
 

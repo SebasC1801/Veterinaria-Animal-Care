@@ -1,5 +1,6 @@
 # Build artifacts
 java-app/target/
+java-app/build/
 
 # Local backups
 backup-*.zip
@@ -7,6 +8,10 @@ backup-*.zip
 # IDE/editor junk
 .vscode/
 .idea/
+*.iml
+.project
+.classpath
+.settings/
 
 # OS files
 Thumbs.db
@@ -14,3 +19,27 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Maven
+.mvn/
+mvn.cmd
+mvnw
+mvnw.cmd
+
+# Compiled class files
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Environment variables
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~

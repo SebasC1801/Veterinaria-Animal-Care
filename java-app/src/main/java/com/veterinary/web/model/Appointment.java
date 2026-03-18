@@ -1,31 +1,19 @@
 package com.veterinary.web.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
-@Document(collection = "appointments")
 public class Appointment {
-    @Id
     private String id;
-
-    @Indexed
     private String petId;
-
-    @Indexed
     private String veterinarian; // name or id for simplicity
-
     private String reason;
     private String description;
     private String priority; // 'alta', 'media', 'baja'
     private String type; // 'consulta', 'vacunación', etc.
     private String status; // 'pendiente', 'confirmada', 'completada', 'cancelada'
-
     // Simple date/time fields; can be ISO strings (e.g., 2025-11-08, 14:30)
     private String date; 
     private String time; 
-
     private long createdAt;
     private long updatedAt;
     private List<String> history;

@@ -1,122 +1,81 @@
-# Gestor de Mascotas Veterinaria 🐶🐱
+# Sistema de Gestión Veterinaria 🐶🐱
 
-Una aplicación completa desarrollada en **Java** que implementa los patrones de diseño de software para la gestión de mascotas en una veterinaria.
+Aplicación web desarrollada en Java Spring Boot para la gestión de mascotas, citas y usuarios en una veterinaria.
 
-## ✅ Proyecto consolidado en Java + Frontend estático
+## 🚀 Inicio Rápido
 
-El proyecto funciona principalmente como aplicación Java (con Spring Boot) y un frontend estático en `java-app/web-version`. Se han removido artefactos no utilizados para mantener una base limpia y coherente.
+### Ejecutar localmente
 
-## 📚 Contenido
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Instalación y Ejecución](#instalación-y-ejecución)
-- [Funcionalidades](#funcionalidades)
-- [Uso Rápido](#uso-rapido)
-- [Contribuciones](#contribuciones)
-- [Licencia](#licencia)
-
-## 📖 Documentación
-
-Para un contexto detallado de la aplicación (arquitectura, patrones y flujos), consulta: [`CONTEXTO_COMPLETO.md`](./CONTEXTO_COMPLETO.md).
-
-## Patrones Implementados
-
-- **Singleton**: Sistema central de gestión de la veterinaria
-- **Factory Method**: Creación de diferentes tipos de animales
-- **Abstract Factory**: Familias de mascotas (domésticas vs exóticas)
-- **Builder**: Construcción paso a paso de fichas de mascotas
-- **Prototype**: Clonación de fichas para registrar descendencia
-
-Cada patrón se implementa con un ejemplo funcional dentro del sistema. Los scripts de demostración legacy se han retirado durante la limpieza.
-
-## Estructura del Proyecto
-
-```
-📁 Veterinaria_Animal_Care/
-├── 📁 java-app/
-│   ├── 📄 pom.xml
-│   ├── 📄 run-web.bat
-│   ├── 📄 run-direct.bat
-│   ├── 📄 verificar-ejecutar.bat
-│   ├── 📁 src/main/java/com/veterinary/
-│   ├── 📁 src/main/resources/
-│   └── 📁 web-version/
-├── 📄 README.md
-└── 📄 CONTEXTO_COMPLETO.md
-```
-
-## Instalación y Ejecución
-
-### Requisitos
-- **Java 11 o superior**
-- **Maven 3.6 o superior**
-
-### 🚀 Ejecución Rápida
-
-- **Aplicación Web Spring Boot**
 ```bash
 cd java-app
-mvn spring-boot:run
-```
-Accede a: `http://localhost:8080`
-
-También puedes usar el script:
-```bash
-cd java-app
-run-web.bat
+ejecutar-simple.bat
 ```
 
-### 🔧 Frontend estático
-Para levantar el frontend sin backend:
-```bash
-cd java-app
-python -m http.server 8001
-# Navega a: http://localhost:8001/web-version/index.html
+Abre tu navegador en: `http://localhost:8086`
+
+### Usuarios de prueba
+
+- **Veterinario:** veterinario@test.com / 123456
+- **Usuario:** usuario@test.com / 123456
+
+## 📁 Estructura del Proyecto
+
+```
+├── java-app/
+│   ├── src/main/
+│   │   ├── java/com/veterinary/
+│   │   │   ├── models/          # Patrones de diseño (Factory, Builder, Prototype)
+│   │   │   ├── services/        # Lógica de negocio (Singleton)
+│   │   │   └── web/             # Aplicación web Spring Boot
+│   │   │       ├── api/         # Controladores REST
+│   │   │       ├── model/       # Modelos de datos
+│   │   │       ├── repository/  # Repositorios en memoria
+│   │   │       └── service/     # Servicios de la aplicación
+│   │   └── resources/
+│   │       ├── static/          # CSS, JS, imágenes
+│   │       └── templates/       # HTML
+│   ├── ejecutar-simple.bat      # Script para ejecutar
+│   ├── preparar-despliegue.bat  # Script para compilar JAR
+│   └── pom.xml                  # Configuración Maven
+├── README.md                    # Este archivo
+└── GUIA_DESPLIEGUE.md          # Guía para desplegar en la nube
 ```
 
-## Funcionalidades
+## 🎯 Funcionalidades
 
-### 🎯 Plataforma Java (Consola + Web Spring Boot)
-- **Sistema unificado**: Todas las funcionalidades consolidadas en Java
-- **Patrones completos**: Los 5 patrones implementados y demostrables
-- **Interfaz web moderna**: Plantillas Thymeleaf y CSS personalizado
-- **API REST**: Endpoints para integración y consulta de datos
-- **Validación**: Validaciones en cliente (web) y servidor
-- **H2 en memoria**: Consola disponible en `/h2-console` (configurado)
+- ✅ Autenticación de usuarios (Veterinario/Usuario)
+- ✅ Registro y gestión de mascotas
+- ✅ Programación de citas médicas
+- ✅ Gestión de estados de citas
+- ✅ Interfaz web responsive
+- ✅ Datos en memoria (sin base de datos externa)
 
-### 🖥️ Aplicación de Escritorio Swing
-- **Interfaz gráfica**: Aplicación Swing completa
-- **Registro de mascotas**: Formulario con pestañas
-- **Prototypes**: Registro y clonación de fichas
-- **Estadísticas**: Información del sistema
+## 🛠️ Tecnologías
 
-## Uso Rápido
-- Ejecuta `run-demo.bat` para ver los patrones en acción.
-- En la versión web, visita:
-  - `http://localhost:8080/` (Inicio)
-  - `http://localhost:8080/registro` (Registro de mascotas)
-  - `http://localhost:8080/registros` (Listado)
-  - `http://localhost:8080/patrones` (Documentación de patrones)
+- Java 11
+- Spring Boot 2.7.14
+- Thymeleaf
+- JavaScript (Vanilla)
+- CSS3
+- Maven
 
-## Contribuciones
+## 📋 Requisitos
 
-Este proyecto fue desarrollado como demostración de patrones de diseño de software. Las contribuciones son bienvenidas para:
-- Agregar nuevos tipos de animales
-- Mejorar la interfaz de usuario
-- Implementar funcionalidades adicionales
-- Mejorar la documentación
+- Java 11 o superior
+- Maven (incluido en `vendor/`)
 
-## 🔧 Versión Simplificada Java
+## 🌐 Despliegue
 
-Si tienes problemas con herramientas o dependencias, existe una versión simplificada de la aplicación Java:
+Para desplegar en la nube (Render, Railway, Heroku, etc.), consulta:
 
-- **Archivos**: `java-app/src/main/java/com/veterinary/patterns/Simple*.java`
-- **Documentación**: `java-app/README-SIMPLE.md`
-- **Script de ejecución**: `java-app/run-simple.bat`
+📖 **[GUIA_DESPLIEGUE.md](GUIA_DESPLIEGUE.md)**
 
-Esta versión fue creada únicamente para **pruebas o demostraciones rápidas sin dependencias**. La versión oficial evaluada es la completa.
+## 📝 Notas
 
----
+- Los datos se almacenan en memoria (se pierden al reiniciar)
+- Los usuarios de prueba se cargan automáticamente
+- MongoDB está deshabilitado por defecto
 
-## 🧾 Licencia
+## 🎓 Proyecto Académico
 
-Proyecto académico desarrollado en la **Universidad Cooperativa de Colombia**, bajo fines educativos.
+Desarrollado en la **Universidad Cooperativa de Colombia** con fines educativos.
