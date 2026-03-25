@@ -6,7 +6,7 @@ COPY java-app/src ./src
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecutar la aplicación
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:11-jre
 WORKDIR /app
 COPY --from=build /app/target/veterinary-system-1.0.0.jar app.jar
 EXPOSE 8086
